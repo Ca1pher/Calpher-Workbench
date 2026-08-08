@@ -8,9 +8,9 @@
     (() => {
       try { var t = localStorage.getItem('calpher-workbench-theme') || 'dark'; } catch(e) { var t = 'dark'; }
       try { var a = localStorage.getItem('calpher-workbench-accent') || 'ocean'; } catch(e) { var a = 'ocean'; }
-      document.documentElement.dataset.theme = ['light','dark','system'].includes(t) ? t : 'dark';
-      var r = t === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : (t === 'system' ? 'dark' : t);
-      document.documentElement.dataset.themeResolved = r;
+      var validT = ['light','dark','system'].includes(t) ? t : 'dark';
+      document.documentElement.dataset.theme = validT;
+      document.documentElement.dataset.themeResolved = validT === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : validT;
       document.documentElement.dataset.accent = ['emerald','ocean','iris','amber','sakura'].includes(a) ? a : 'ocean';
     })();
   </script>
