@@ -40,6 +40,28 @@
     $('pageTitleMain').textContent = '个人工作台';
   }
 
+  const embedFrameEl = $('embedFrame');
+  embedFrameEl.addEventListener('load', () => { $('embedLoading').style.display = 'none'; });
+
+  window.addEventListener('message', (event) => {
+    const v = state.view;
+    if (!v || v.mode !== 'embed') return;
+    const app = state.apps[v.id];
+    if (!app || event.source !== embedFrameEl.contentWindow) return;
+    const expected = app.url && app.url.startsWith('http') ? new URL(app.url).origin : location.origin;
+    if (event.origin !== expected) return;
+    const d = event.data;
+    if (!d || d.source !== 'kypher-embed') return;
+    if (d.type === 'ready') {
+      $('embedLoading').style.display = 'none';
+    } else if (d.type === 'title' && d.title) {
+      $('pageTitleMain').textContent = d.title;
+      $('embedTitle').textContent = d.title;
+    } else if (d.type === 'exit') {
+      exitEmbed();
+    }
+  });
+
   async function loadApps() {
     const data = await fetchJSON('/api/apps');
     state.apps = data || {};
@@ -302,4 +324,8 @@
   function closeDrawer() { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
   burger.addEventListener('click', () => sidebar.classList.contains('open') ? closeDrawer() : openDrawer());
   backdrop.addEventListener('click', closeDrawer);
+
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    window.__kypherEmbedTest__ = { enterEmbed, exitEmbed, state };
+  }
 })();
