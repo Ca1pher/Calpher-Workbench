@@ -23,6 +23,7 @@
   }
 
   function setTheme(theme) {
+    if (!['light', 'dark', 'system'].includes(theme)) return;
     document.documentElement.dataset.theme = theme;
     document.documentElement.dataset.themeResolved = resolveTheme(theme);
     try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
@@ -56,13 +57,6 @@
     const modal = document.createElement('div');
     modal.className = 'cn-modal';
     const title = opts.title ? `<h2 style="margin:0 0 14px;font-size:16px">${opts.title}</h2>` : '';
-    let body = '';
-    if (opts.body) {
-      body = typeof opts.body === 'string' ? `<div>${opts.body}</div>` : '<div></div>';
-      if (typeof opts.body === 'string') {
-        modal.insertAdjacentHTML('beforeend', `<div>${opts.body}</div>`);
-      }
-    }
     modal.innerHTML = title;
     if (typeof opts.body === 'string') modal.insertAdjacentHTML('beforeend', `<div>${opts.body}</div>`);
     const footer = document.createElement('div');

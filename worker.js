@@ -21,17 +21,17 @@ export default {
     const url = new URL(request.url);
     const method = request.method;
 
-    // 静态资源
-    if (url.pathname === '/' || url.pathname === '/index.html') {
+    // 静态资源（仅 GET）
+    if (method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
       return new Response(indexHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
     }
-    if (url.pathname === '/assets/styles.css') {
+    if (method === 'GET' && url.pathname === '/assets/styles.css') {
       return new Response(stylesCss, { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
     }
-    if (url.pathname === '/assets/components.js') {
+    if (method === 'GET' && url.pathname === '/assets/components.js') {
       return new Response(componentsJs, { headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
     }
-    if (url.pathname === '/app.js') {
+    if (method === 'GET' && url.pathname === '/app.js') {
       return new Response(appJs, { headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' } });
     }
 

@@ -1,9 +1,21 @@
 const enc = new TextEncoder();
-const dec = new TextDecoder();
+let secretWarned = false;
+
+function sessionSecret(env) {
+  const secret = env.AUTH_COOKIE_SECRET || 'dev-insecure-secret';
+  if (secret === 'dev-insecure-secret' && !secretWarned) {
+    secretWarned = true;
+    console.warn('[auth] AUTH_COOKIE_SECRET 未配置，正在使用公开的 dev-insecure-secret，任何知晓者都可伪造会话。生产部署前必须配置。');
+  }
+  return secret;
+}
+
+async function hmacKey(secret) {
+  return crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+}
 
 async function hmac(secret, data) {
-  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
-  return crypto.subtle.sign('HMAC', key, enc.encode(data));
+  return crypto.subtle.sign('HMAC', await hmacKey(secret), enc.encode(data));
 }
 
 function toHex(buf) {
@@ -27,7 +39,7 @@ export function buildLogoutCookie() {
 }
 
 async function signSession(env, payload) {
-  const secret = env.AUTH_COOKIE_SECRET || 'dev-insecure-secret';
+  const secret = sessionSecret(env);
   const body = JSON.stringify(payload);
   const sig = toHex(await hmac(secret, body));
   return `${typeof Buffer !== 'undefined' ? Buffer.from(body).toString('base64') : btoa(unescape(encodeURIComponent(body)))}.${sig}`;
@@ -39,11 +51,11 @@ async function verifySession(env, sid) {
   if (dot < 0) return null;
   const b64 = sid.slice(0, dot);
   const sig = sid.slice(dot + 1);
-  const secret = env.AUTH_COOKIE_SECRET || 'dev-insecure-secret';
+  const secret = sessionSecret(env);
   let body;
   try { body = decodeURIComponent(escape(atob(b64))); } catch (e) { return null; }
-  const expect = toHex(await hmac(secret, body));
-  if (expect !== sig) return null;
+  const valid = await crypto.subtle.verify('HMAC', await hmacKey(secret), toBytes(sig), enc.encode(body));
+  if (!valid) return null;
   try { return JSON.parse(body); } catch (e) { return null; }
 }
 
@@ -64,14 +76,18 @@ export async function authenticate(request, env) {
 }
 
 export async function loginByMaster(env, name, pass) {
+  // 模式优先级：AUTH_MASTER_PASS 存在即独立模式（本地校验）。
+  // 接入模式（AUTH_MASTER_ORIGIN + AUTH_MASTER_TOKEN）依赖主鉴权中心
+  // 的 federation 接口，当前阶段尚未落地，接入模式暂不可用。
   const mode = env.AUTH_MASTER_PASS ? 'standalone' : (env.AUTH_MASTER_ORIGIN ? 'federated' : 'none');
   let ok = false;
   let displayName = name;
   if (mode === 'standalone') {
     ok = name === (env.AUTH_MASTER_NAME || 'admin') && pass === env.AUTH_MASTER_PASS;
   } else if (mode === 'federated') {
-    // 接入模式：调主鉴权中心校验（本阶段工作台即主中心，直接本地校验主账号）
-    ok = name === (env.AUTH_MASTER_NAME || 'admin') && pass === env.AUTH_MASTER_PASS;
+    // 占位：待主鉴权中心 federation 接口落地后改为向 AUTH_MASTER_ORIGIN 校验。
+    // 当前一律失败，避免配置接入模式却静默走本地空密码校验。
+    ok = false;
   } else {
     ok = false;
   }

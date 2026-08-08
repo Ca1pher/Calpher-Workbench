@@ -16,8 +16,14 @@
 
 ## 模式说明
 
-- **接入模式**：配置 `AUTH_MASTER_ORIGIN` + `AUTH_MASTER_TOKEN`，共享主账号 Cookie。
-- **独立模式**：未配置上述变量，用 `AUTH_MASTER_PASS` 本地校验。
+| 模式 | 配置 | 状态 |
+|---|---|---|
+| 独立模式 | `AUTH_MASTER_PASS` + `AUTH_MASTER_NAME`，本地校验 | 可用 |
+| 接入模式 | `AUTH_MASTER_ORIGIN` + `AUTH_MASTER_TOKEN`，指向主鉴权中心 | **未落地**（占位，配置后登录一律失败） |
+
+- **独立模式**：配置 `AUTH_MASTER_PASS`（+ 可选 `AUTH_MASTER_NAME`）本地校验，共享同一套 `AUTH_COOKIE_SECRET` 即跨子域免登录。
+- **接入模式**：依赖主鉴权中心的 federation 接口，当前阶段尚未实现。子项目现阶段请使用独立模式（各项目配置相同的主账号与密钥）。
+- 模式判定优先级：存在 `AUTH_MASTER_PASS` 即为独立模式，否则有 `AUTH_MASTER_ORIGIN` 则为接入模式（暂不可用），两者皆无则不开放登录。
 
 ## 共享 Cookie
 
