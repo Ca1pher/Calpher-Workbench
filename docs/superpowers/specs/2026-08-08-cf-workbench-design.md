@@ -35,7 +35,7 @@
 
 ```
 VPS/
-├── workbench/                ← 新项目：个人工作台（Cloudflare Worker，独立 git 仓库）
+├── Calpher-Workbench/        ← 新项目：个人工作台（Cloudflare Worker，独立 git 仓库）
 │   ├── worker.js              (或 src/index.js)
 │   ├── static/
 │   │   ├── index.html        ← octopus 风格：侧边栏 + 概览卡 + 项目网格
@@ -59,7 +59,7 @@ VPS/
 
 **三个关键约定：**
 
-1. **母版 / 拷贝**：`workbench/` 里放设计系统和鉴权中间件的权威版本，子项目目录下各有一份拷贝。标准演进 → 改母版 → 同步拷贝。
+1. **母版 / 拷贝**：`Calpher-Workbench/` 里放设计系统和鉴权中间件的权威版本，子项目目录下各有一份拷贝。标准演进 → 改母版 → 同步拷贝。
 2. **注册表**：`apps.json` 登记所有子项目（名称、URL、图标、描述），工作台据此渲染网格/概览。
 3. **独立 + 接入**：子项目永远是可独立访问的 Worker；是否「接入共享账号」由鉴权配置决定，而不是由代码结构决定。
 
@@ -164,7 +164,7 @@ VPS/
 
 ## 六、实施顺序
 
-1. **标准先行**：建 `workbench/` 仓库 → 定义设计系统母版 + auth.js 母版 + apps.json 规范 + 接入标准文档。
+1. **标准先行**：建 `Calpher-Workbench/` 仓库 → 定义设计系统母版 + auth.js 母版 + apps.json 规范 + 接入标准文档。
 2. **改造 socks**：按标准接入。
 3. **改造 calpher-sub**：按标准接入。
 4. **后续新项目**：按标准接入即可。
@@ -178,6 +178,15 @@ VPS/
 
 - **工作台**：先在本地搭建开发（本地 git 历史），部署到 CF 并改造完子项目、测试通过后，再与子项目一起同步到 GitHub。在此之前不建 GitHub remote、不 push。
 - 本地开发阶段：工作台仓库本地提交，保留完整历史，随时可回滚。
+
+## 部署决策（2026-08-08 确认）
+
+- **项目名**：`Calpher-Workbench`（目录名同），Worker 名 `calpher-workbench`。
+- **统一父域**：`kypher72.indevs.in`（zone id `68bc861245c2078d2e50cdc3b47c0ca8`），所有接入站点挂其下。
+- **工作台主站**：`www.kypher72.indevs.in`，父域 Cookie `Domain=kypher72.indevs.in`。
+- **验收顺序**：先部署现状（当前已验收的版本）到 `www.kypher72.indevs.in` 让用户初步验收 → 再实现门户壳/移动端/主题同步迭代。
+- **子项目现状域名**（改造前保持）：`socks.kypher.kdns.fr`、`submgr.kypher.ccwu.cc`。改造时统一迁到 `kypher72.indevs.in` 子域。
+- **部署网络**：本机需走代理（`http_proxy`/`https_proxy` = `http://127.0.0.1:10808`）。
 
 ## 门户壳（Portal Shell）演进（2026-08-08 批准）
 

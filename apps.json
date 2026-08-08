@@ -7,13 +7,13 @@
   },
   "socks": {
     "name": "代理切换台",
-    "url": "https://socks.example.dev",
+    "url": "https://socks.kypher.kdns.fr",
     "icon": "switch",
     "description": "Free Residential IP Proxy Controller"
   },
   "calpher-sub": {
     "name": "订阅管理",
-    "url": "https://calpher-sub.example.dev",
+    "url": "https://submgr.kypher.ccwu.cc",
     "icon": "sub",
     "description": "多用户 Clash/V2Ray 订阅编排与分发"
   }

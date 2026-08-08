@@ -1,12 +1,14 @@
-name = "workbench"
+name = "calpher-workbench"
 main = "worker.js"
 compatibility_date = "2026-05-31"
 workers_dev = true
 
-rules = [
-  { type = "Text", globs = ["**/*.html", "**/static/app.js", "**/design-system/components.js", "**/design-system/styles.css", "**/apps.json"], fallthrough = true }
-]
-
 [vars]
-# 父域名（占位）：共享 Cookie 的 Domain 属性。正式域名确定后改这里。
-PARENT_DOMAIN = "example.dev"
+# 统一父域名：共享 Cookie（calpher_auth / calpher_prefs）的 Domain 属性。
+# 工作台在 www.kypher72.indevs.in，子项目用其子域名，跨子域共享登录与主题。
+PARENT_DOMAIN = "kypher72.indevs.in"
+
+# 绑定到自定义域名（zone: kypher72.indevs.in）
+[[routes]]
+pattern = "www.kypher72.indevs.in"
+zone_id = "68bc861245c2078d2e50cdc3b47c0ca8"
