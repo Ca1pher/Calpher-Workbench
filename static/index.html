@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calpher 工作台</title>
+  <script>
+    (() => {
+      try { var t = localStorage.getItem('calpher-workbench-theme') || 'dark'; } catch(e) { var t = 'dark'; }
+      try { var a = localStorage.getItem('calpher-workbench-accent') || 'ocean'; } catch(e) { var a = 'ocean'; }
+      document.documentElement.dataset.theme = ['light','dark','system'].includes(t) ? t : 'dark';
+      var r = t === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : (t === 'system' ? 'dark' : t);
+      document.documentElement.dataset.themeResolved = r;
+      document.documentElement.dataset.accent = ['emerald','ocean','iris','amber','sakura'].includes(a) ? a : 'ocean';
+    })();
+  </script>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <main class="cn-app-shell">
+    <aside class="cn-sidebar">
+      <div class="cn-brand">Calpher OS</div>
+      <nav class="cn-primary-nav" aria-label="主导航" id="primaryNav"></nav>
+      <div class="cn-sidebar-bottom" id="userBox"></div>
+    </aside>
+    <section class="cn-core">
+      <header class="cn-topbar">
+        <div class="cn-page-title"><h1>Calpher 工作台</h1><p>统一接入 · 共享登录 · 独立部署</p></div>
+        <div class="cn-top-actions">
+          <button id="themeToggleBtn" class="cn-round-btn" aria-label="切换显示主题">☾</button>
+          <button id="settingsBtn" class="cn-round-btn" aria-label="设置">⚙</button>
+        </div>
+      </header>
+      <section class="cn-metric-grid" id="metricGrid"></section>
+      <section class="cn-project-grid" id="projectGrid"></section>
+    </section>
+  </main>
+  <script src="/assets/components.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
