@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 · Calpher Workbench</title>
+  <script>
+    (() => {
+      try { var t = localStorage.getItem('calpher-workbench-theme') || 'dark'; } catch(e) { var t = 'dark'; }
+      try { var a = localStorage.getItem('calpher-workbench-accent') || 'ocean'; } catch(e) { var a = 'ocean'; }
+      var validT = ['light','dark','system'].includes(t) ? t : 'dark';
+      document.documentElement.dataset.theme = validT;
+      document.documentElement.dataset.themeResolved = validT === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : validT;
+      document.documentElement.dataset.accent = ['emerald','ocean','iris','amber','sakura'].includes(a) ? a : 'ocean';
+    })();
+  </script>
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body class="login-body">
+  <main class="login-shell panel">
+    <div class="login-brand">
+      <strong>Calpher Workbench</strong>
+      <span>统一接入 · 共享登录 · 独立部署</span>
+    </div>
+    <form id="loginForm" class="login-form" autocomplete="off">
+      <label class="login-field">
+        <span>账号</span>
+        <input id="loginName" name="name" placeholder="请输入账号" required autocomplete="username" />
+      </label>
+      <label class="login-field">
+        <span>密码</span>
+        <input id="loginPass" name="pass" type="password" placeholder="请输入密码" required autocomplete="current-password" />
+      </label>
+      <p id="loginError" class="login-error" hidden></p>
+      <button type="submit" class="login-submit">登录</button>
+    </form>
+    <p class="login-hint">需要管理员账号授权访问，未登录无法查看工作台内容。</p>
+  </main>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/assets/components.js"></script>
+  <script>
+    (function () {
+      var form = document.getElementById('loginForm');
+      var err = document.getElementById('loginError');
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        err.hidden = true;
+        var btn = form.querySelector('.login-submit');
+        btn.disabled = true; btn.textContent = '登录中…';
+        try {
+          var res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: document.getElementById('loginName').value.trim(), pass: document.getElementById('loginPass').value }),
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.error || '登录失败');
+          location.href = '/';
+        } catch (err2) {
+          err.textContent = err2.message;
+          err.hidden = false;
+          btn.disabled = false; btn.textContent = '登录';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

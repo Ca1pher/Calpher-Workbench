@@ -1,43 +1,118 @@
 <!doctype html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calpher Workbench</title>
-  <script>
-    (() => {
-      try { var t = localStorage.getItem('calpher-workbench-theme') || 'dark'; } catch(e) { var t = 'dark'; }
-      try { var a = localStorage.getItem('calpher-workbench-accent') || 'ocean'; } catch(e) { var a = 'ocean'; }
-      var validT = ['light','dark','system'].includes(t) ? t : 'dark';
-      document.documentElement.dataset.theme = validT;
-      document.documentElement.dataset.themeResolved = validT === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : validT;
-      document.documentElement.dataset.accent = ['emerald','ocean','iris','amber','sakura'].includes(a) ? a : 'ocean';
-    })();
-  </script>
-  <link rel="stylesheet" href="/assets/styles.css" />
-</head>
-<body>
-  <main class="cn-app-shell">
-    <aside class="cn-sidebar cn-panel">
-      <div class="cn-brand">Calpher Workbench</div>
-      <nav class="cn-primary-nav" aria-label="主导航" id="primaryNav"></nav>
-      <div class="cn-sidebar-bottom" id="userBox"></div>
-    </aside>
-    <section class="cn-core cn-panel">
-      <header class="cn-topbar">
-        <button id="burgerBtn" class="cn-round-btn cn-burger" aria-label="打开菜单">☰</button>
-        <div class="cn-page-title"><h1>Calpher Workbench</h1><p>统一接入 · 共享登录 · 独立部署</p></div>
-        <div class="cn-top-actions">
-          <button id="themeToggleBtn" class="cn-round-btn" aria-label="切换显示主题">☾</button>
-          <button id="settingsBtn" class="cn-round-btn" aria-label="设置">⚙</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#030504" />
+    <title>Calpher Workbench</title>
+    <script>
+      (() => {
+        try { var t = localStorage.getItem('calpher-workbench-theme') || 'dark'; } catch(e) { var t = 'dark'; }
+        try { var a = localStorage.getItem('calpher-workbench-accent') || 'ocean'; } catch(e) { var a = 'ocean'; }
+        var validT = ['light','dark','system'].includes(t) ? t : 'dark';
+        document.documentElement.dataset.theme = validT;
+        document.documentElement.dataset.themeResolved = validT === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : validT;
+        document.documentElement.dataset.accent = ['emerald','ocean','iris','amber','sakura'].includes(a) ? a : 'ocean';
+      })();
+    </script>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <svg class="svg-sprite" aria-hidden="true">
+      <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+      <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5h10.5A2.5 2.5 0 0 1 18 7v12H7.2A2.2 2.2 0 0 1 5 16.8V4.5Z"/><path d="M8 8h7M8 11h6M5 16.5c0-1.1.9-2 2-2h11"/></symbol>
+      <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></symbol>
+      <symbol id="i-columns" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="m9.5 14.5 5-5M7.5 17.5l-1 1a3.5 3.5 0 0 1-5-5l3-3a3.5 3.5 0 0 1 5 0M16.5 6.5l1-1a3.5 3.5 0 1 1 5 5l-3 3a3.5 3.5 0 0 1-5 0"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2l1.4 5.1L18 9l-4.6 1.9L12 16l-1.4-5.1L6 9l4.6-1.9L12 2Z"/><path d="m19 15 .7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></symbol>
+      <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M14 4v6M4 17h2M10 17h10M10 14v6"/></symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path class="play-path" d="m9 7 8 5-8 5V7Z"/><path class="pause-path" d="M9 7v10M15 7v10"/></symbol>
+      <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+      <symbol id="i-pen" viewBox="0 0 24 24"><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/><path d="m13.5 8 3 3"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+      <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></symbol>
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+    </svg>
+
+    <main class="app-shell">
+      <aside class="sidebar panel">
+        <div class="brand"><strong>Calpher</strong><span>Workbench OS</span></div>
+        <button id="burgerBtn" class="round-btn burger" aria-label="打开菜单"><svg><use href="#i-list"/></svg></button>
+        <nav class="primary-nav" aria-label="主导航" id="primaryNav"></nav>
+        <div class="sidebar-bottom">
+          <div class="path-heading"><span>工作台空间</span><button id="settingsSidebarBtn" aria-label="设置">⚙</button></div>
+          <div class="profile-row" id="userBox"></div>
         </div>
-      </header>
-      <section class="cn-metric-grid" id="metricGrid"></section>
-      <section class="cn-project-grid" id="projectGrid"></section>
-    </section>
-    <div class="cn-drawer-backdrop" id="drawerBackdrop"></div>
-  </main>
-  <script src="/assets/components.js"></script>
-  <script src="/app.js"></script>
-</body>
+      </aside>
+
+      <section class="core">
+        <header class="topbar">
+          <div class="page-title"><h1>个人工作台</h1><p>统一接入 · 共享登录 · 独立部署</p></div>
+          <label class="search-box"><svg><use href="#i-search"/></svg><input id="searchInput" aria-label="搜索项目" placeholder="搜索项目…"/></label>
+          <div class="top-actions">
+            <div class="theme-control">
+              <button id="themeToggleBtn" class="round-btn theme-toggle" aria-label="切换显示主题，当前暗色" title="暗色 · 点击切换为跟随系统">
+                <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+              </button>
+            </div>
+            <button id="settingsBtn" class="round-btn filter-btn" aria-label="工作台设置" title="工作台设置"><svg><use href="#i-settings"/></svg></button>
+            <button id="logoutBtn" class="scan-btn"><svg><use href="#i-user"/></svg><span>退出登录</span></button>
+          </div>
+        </header>
+
+        <section class="metric-grid" aria-label="工作台概览" id="metricGrid"></section>
+
+        <div class="workspace-grid">
+          <section class="queue-pane">
+            <div class="section-heading"><h2>接入项目</h2><span>点击跳转</span></div>
+            <div id="projectList" class="queue-groups"></div>
+          </section>
+
+          <section class="carousel-panel panel" aria-label="项目一览">
+            <div class="section-heading project-heading"><h2>项目一览</h2><span id="projectCount"></span></div>
+            <div id="projectGrid" class="project-grid"></div>
+          </section>
+        </div>
+      </section>
+
+      <aside class="details-panel panel">
+        <div class="details-heading"><h2>✦ 工作台详情</h2><button id="refreshBtn" aria-label="刷新"><svg><use href="#i-spark"/></svg></button></div>
+        <div class="details-content">
+          <div class="detail-title-row"><h2 id="detailTitle">Calpher Workbench</h2><span id="detailStatus">在线</span></div>
+          <p class="detail-description" id="detailDescription">Calpher 个人云计算工作台，聚合在 Cloudflare Workers 上独立部署的服务，统一接入共享登录与统一视觉。</p>
+          <dl class="metadata">
+            <div><dt>接入方</dt><dd><span class="mini-avatar">CP</span>Calpher</dd></div>
+            <div><dt>登录会话</dt><dd><svg><use href="#i-user"/></svg><span id="detailUser">未登录</span></dd></div>
+            <div><dt>鉴权模式</dt><dd><i class="status-dot"></i><span>独立账号</span></dd></div>
+            <div><dt>当前主题</dt><dd><i class="priority-dot"></i><span id="detailTheme">暗色</span></dd></div>
+            <div><dt>父域</dt><dd><svg><use href="#i-folder"/></svg><span id="detailDomain">—</span></dd></div>
+          </dl>
+          <article class="ai-note">
+            <h3>关于本工作台</h3>
+            <ul>
+              <li>子项目独立部署在 Cloudflare，通过注册表统一接入</li>
+              <li>共享登录基于父域 Cookie，一处登录全站可用</li>
+              <li>门户壳共享侧边栏迭代计划中，敬请期待</li>
+            </ul>
+            <button id="detailDocsBtn">查看接入说明</button>
+          </article>
+        </div>
+        <footer class="detail-actions">
+          <button id="refreshBtn2"><svg><use href="#i-spark"/></svg>刷新数据</button>
+          <button class="primary" id="openWorkbenchBtn"><svg><use href="#i-check"/></svg>工作台首页</button>
+          <button class="more" aria-label="更多" id="settingsBtn2"><svg><use href="#i-more"/></svg></button>
+        </footer>
+      </aside>
+    </main>
+
+    <div id="toast" class="toast" role="status"></div>
+    <script src="/assets/components.js"></script>
+    <script src="/app.js"></script>
+  </body>
 </html>

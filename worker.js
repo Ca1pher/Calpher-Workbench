@@ -1,4 +1,5 @@
 import indexHtml from './static/index.html';
+import loginHtml from './static/login.html';
 import stylesCss from './design-system/styles.css';
 import componentsJs from './design-system/components.js';
 import appJs from './static/app.js';
@@ -21,10 +22,12 @@ export default {
     const url = new URL(request.url);
     const method = request.method;
 
-    // 静态资源（仅 GET）
-    if (method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
-      return new Response(indexHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
+    // 登录页（无需鉴权）
+    if (method === 'GET' && url.pathname === '/login') {
+      return new Response(loginHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
     }
+
+    // 静态资源（仅 GET）
     if (method === 'GET' && url.pathname === '/assets/styles.css') {
       return new Response(stylesCss, { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
     }
@@ -35,8 +38,19 @@ export default {
       return new Response(appJs, { headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'no-cache' } });
     }
 
-    // 项目注册表
+    // 工作台首页：未登录重定向到登录页
+    if (method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
+      const { user } = await authenticate(request, env);
+      if (!user) {
+        return Response.redirect(new URL('/login', url.origin).toString(), 302);
+      }
+      return new Response(indexHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
+    }
+
+    // 项目注册表：需登录
     if (url.pathname === '/api/apps' && method === 'GET') {
+      const { user } = await authenticate(request, env);
+      if (!user) return json({ error: '未登录' }, 401);
       // apps.json 经 Text rule 导入为字符串，需先解析
       return json(JSON.parse(appsJson));
     }
