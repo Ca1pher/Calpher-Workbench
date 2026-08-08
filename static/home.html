@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050807" />
+    <meta name="description" content="Calpher Workbench 是面向个人 Cloudflare 项目的统一工作台，提供共享登录、独立部署和隔离空间。" />
+    <title>Calpher Workbench</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script>
+      (() => {
+        try { var t = localStorage.getItem('calpher-workbench-theme') || 'dark'; } catch (e) { var t = 'dark'; }
+        var valid = ['light', 'dark', 'system'].includes(t) ? t : 'dark';
+        var resolved = valid === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : valid;
+        document.documentElement.dataset.theme = valid;
+        document.documentElement.dataset.themeResolved = resolved;
+      })();
+    </script>
+    <link rel="preload" href="/assets/workbench-hero.webp" as="image" type="image/webp" />
+    <link rel="stylesheet" href="/assets/home.css?v=1" />
+  </head>
+  <body>
+    <header class="home-nav" data-home-nav>
+      <a class="home-brand" href="/" aria-label="Calpher Workbench 首页">
+        <span class="home-brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span><strong>Calpher</strong><small>Workbench</small></span>
+      </a>
+      <nav class="home-nav-links" aria-label="首页导航">
+        <a href="#system">工作方式</a>
+        <a href="#access">接入模式</a>
+        <a href="#principles">设计原则</a>
+      </nav>
+      <div class="home-nav-actions">
+        <button class="home-icon-btn" id="homeThemeBtn" type="button" aria-label="切换显示主题" title="切换显示主题">
+          <span aria-hidden="true">◐</span>
+        </button>
+        <button class="home-enter" id="navEnterBtn" type="button"><span>登录工作台</span><b aria-hidden="true">↗</b></button>
+      </div>
+    </header>
+
+    <main>
+      <section class="home-hero" id="top" aria-labelledby="heroTitle">
+        <div class="hero-media" aria-hidden="true">
+          <img src="/assets/workbench-hero.webp" alt="" width="1920" height="1200" fetchpriority="high" />
+          <div class="hero-media-shade"></div>
+        </div>
+        <div class="hero-grid" aria-hidden="true"></div>
+        <div class="hero-pointer" aria-hidden="true"></div>
+        <div class="hero-content">
+          <p class="hero-kicker" data-intro>YOUR PRIVATE CONTROL PLANE <span>01</span></p>
+          <h1 id="heroTitle" aria-label="Calpher Workbench">
+            <span class="hero-line"><i>Calpher</i></span>
+            <span class="hero-line hero-line-offset"><i>Workbench</i></span>
+          </h1>
+          <div class="hero-bottom" data-intro>
+            <p>把独立部署的 Cloudflare 项目放进同一个入口。共享登录和视觉语言，同时保留每个站点自己的边界。</p>
+            <button class="hero-cta" id="heroEnterBtn" type="button">
+              <span>进入工作台</span>
+              <i aria-hidden="true">↗</i>
+            </button>
+          </div>
+        </div>
+        <a class="hero-scroll" href="#system" aria-label="继续浏览">
+          <span>SCROLL TO EXPLORE</span><i></i>
+        </a>
+      </section>
+
+      <section class="manifesto home-section" id="system">
+        <div class="section-index">02 / WORKBENCH</div>
+        <div class="manifesto-copy">
+          <p class="section-eyebrow">不是把所有项目揉成一个项目</p>
+          <h2 data-reveal-text>
+            一个入口，<span>管理彼此独立的服务。</span><br />
+            一次登录，<span>穿过不同域名的边界。</span>
+          </h2>
+        </div>
+        <div class="manifesto-note" data-reveal>
+          <span>CALPHER SYSTEM</span>
+          <p>主站负责身份、入口和成员空间。子站继续独立部署、独立维护，并通过短时签名完成可信接入。</p>
+        </div>
+      </section>
+
+      <section class="system-section home-section" id="access">
+        <div class="section-heading" data-reveal>
+          <div>
+            <p class="section-eyebrow">接入模式</p>
+            <h2>边界清楚，进入自然。</h2>
+          </div>
+          <p>平台接入与个人导航分开管理。需要共享身份的项目使用密钥握手，普通网站只保留轻量入口。</p>
+        </div>
+        <div class="system-track">
+          <article class="system-card system-card-primary" data-system-card>
+            <span class="system-card-no">01</span>
+            <div class="system-card-icon" aria-hidden="true">◎</div>
+            <h3>统一身份</h3>
+            <p>主站会话通过短时 handoff 进入已授权子站，退出时同步清理登录状态。</p>
+            <small>SHARED AUTHENTICATION</small>
+          </article>
+          <article class="system-card" data-system-card>
+            <span class="system-card-no">02</span>
+            <div class="system-card-icon" aria-hidden="true">◇</div>
+            <h3>独立部署</h3>
+            <p>项目保留自己的域名、运行环境和数据结构，接入不等于失去自治。</p>
+            <small>INDEPENDENT DEPLOYMENT</small>
+          </article>
+          <article class="system-card" data-system-card>
+            <span class="system-card-no">03</span>
+            <div class="system-card-icon" aria-hidden="true">⊞</div>
+            <h3>隔离空间</h3>
+            <p>成员只看到属于自己的项目和网站导航，管理员按需管理额度与成员工作台。</p>
+            <small>ISOLATED WORKSPACES</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="flow-section home-section" id="principles">
+        <div class="flow-sticky">
+          <p class="section-eyebrow">从登录到抵达</p>
+          <h2>一次连续、可理解的旅程。</h2>
+          <p>用户不需要理解 Cookie、跨域和签名票据。平台把复杂性留在系统内部，只把明确状态呈现在界面上。</p>
+          <button class="text-link" id="flowEnterBtn" type="button">开始使用 <span aria-hidden="true">→</span></button>
+        </div>
+        <div class="flow-steps">
+          <article data-flow-step>
+            <span>01</span><div><h3>登录主站</h3><p>一个账号进入自己的工作台空间。</p></div>
+          </article>
+          <article data-flow-step>
+            <span>02</span><div><h3>选择服务</h3><p>在统一侧边栏中打开已接入项目或个人网站导航。</p></div>
+          </article>
+          <article data-flow-step>
+            <span>03</span><div><h3>安全交接</h3><p>平台验证项目、目标域名与短时票据，再建立子站会话。</p></div>
+          </article>
+          <article data-flow-step>
+            <span>04</span><div><h3>统一退出</h3><p>退出从主站发起，并回到首页登录入口。</p></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="closing-section home-section" data-closing>
+        <p class="section-eyebrow">CALPHER WORKBENCH</p>
+        <h2>你的服务各自生长，<br /><span>在这里共同抵达。</span></h2>
+        <button class="closing-cta" id="closingEnterBtn" type="button">
+          <span>登录工作台</span><i aria-hidden="true">↗</i>
+        </button>
+      </section>
+    </main>
+
+    <footer class="home-footer">
+      <a class="home-brand home-brand-small" href="/">
+        <span class="home-brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span><strong>Calpher</strong><small>Workbench</small></span>
+      </a>
+      <p>统一接入 · 共享登录 · 独立部署</p>
+      <a href="#top">BACK TO TOP ↑</a>
+    </footer>
+
+    <div class="login-layer" id="loginLayer" hidden>
+      <button class="login-backdrop" type="button" data-close-login aria-label="关闭登录窗口"></button>
+      <section class="login-dialog" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+        <button class="login-close" type="button" data-close-login aria-label="关闭">×</button>
+        <div class="login-dialog-head">
+          <span class="home-brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <p>CALPHER SECURE ACCESS</p>
+        </div>
+        <h2 id="loginTitle">回到你的工作台。</h2>
+        <p class="login-dialog-copy">使用管理员或成员账号继续。登录后将安全返回你原本要访问的位置。</p>
+        <form id="homeLoginForm" class="home-login-form">
+          <label><span>账号</span><input id="homeLoginName" name="name" required autocomplete="username" /></label>
+          <label><span>密码</span><input id="homeLoginPass" name="pass" type="password" required autocomplete="current-password" /></label>
+          <p class="home-login-error" id="homeLoginError" role="alert" hidden></p>
+          <button type="submit"><span>登录并继续</span><i aria-hidden="true">→</i></button>
+        </form>
+      </section>
+    </div>
+
+    <script src="/assets/home.bundle.js?v=1"></script>
+  </body>
+</html>

@@ -7,7 +7,8 @@ workers_dev = true
 # 不带 **/ 的精确 glob（如 "static/app.js"）匹配不到 "./static/app.js"，会静默失败。
 # 必须给每个非 html glob 加 **/ 前缀。auth/auth.js 不在此列表，保持 ES module。
 rules = [
-  { type = "Text", globs = ["**/*.html", "**/static/app.js", "**/design-system/components.js", "**/design-system/styles.css", "**/apps.json"], fallthrough = true }
+  { type = "Text", globs = ["**/*.html", "**/static/*.js", "**/static/vendor/*.js", "**/static/*.css", "**/design-system/components.js", "**/design-system/styles.css", "**/apps.json"], fallthrough = true },
+  { type = "Data", globs = ["**/static/assets/*.webp"], fallthrough = true }
 ]
 
 [[kv_namespaces]]

@@ -59,7 +59,8 @@
 })(globalThis);
 (function (global) {
   function openModal(opts) {
-    closeModal();
+    const current = document.getElementById('cn-modal-overlay');
+    if (current) current.remove();
     const overlay = document.createElement('div');
     overlay.className = 'cn-modal-overlay';
     overlay.id = 'cn-modal-overlay';
@@ -84,12 +85,15 @@
     overlay.appendChild(modal);
     overlay.addEventListener('click', (e) => { if (e.target === overlay && opts.closable !== false) closeModal(); });
     document.body.appendChild(overlay);
+    if (global.CalpherMotion) global.CalpherMotion.modalOpened(overlay);
     return overlay;
   }
 
   function closeModal() {
     const el = document.getElementById('cn-modal-overlay');
-    if (el) el.remove();
+    if (!el) return;
+    if (global.CalpherMotion) global.CalpherMotion.modalClose(el, () => el.remove());
+    else el.remove();
   }
 
   function toast(msg) {

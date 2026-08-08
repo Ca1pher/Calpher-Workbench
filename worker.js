@@ -1,5 +1,9 @@
 import indexHtml from './static/index.html';
-import loginHtml from './static/login.html';
+import homeHtml from './static/home.html';
+import homeCss from './static/home.css';
+import homeBundleJs from './static/home.bundle.js';
+import workbenchMotionJs from './static/workbench-motion.bundle.js';
+import workbenchHero from './static/assets/workbench-hero.webp';
 import stylesCss from './design-system/styles.css';
 import componentsJs from './design-system/components.js';
 import appJs from './static/app.js';
@@ -64,7 +68,7 @@ async function workspacePayload(env, context) {
   const apps = {};
   const home = registry.workbench || {
     name: '个人工作台',
-    url: '/',
+    url: '/workbench',
     icon: 'home',
     description: 'Calpher 个人工作台首页',
   };
@@ -180,18 +184,34 @@ export default {
           env, url.searchParams.get('redirect'), url.origin, context.user,
         );
         if (!allowed || allowed.target.origin === url.origin) {
-          return Response.redirect(allowed ? allowed.target.toString() : new URL('/', url.origin).toString(), 302);
+          return Response.redirect(allowed ? allowed.target.toString() : new URL('/workbench', url.origin).toString(), 302);
         }
         const handoff = new URL('/api/auth/handoff', url.origin);
         handoff.searchParams.set('redirect', allowed.target.toString());
         if (context.viewing) handoff.searchParams.set('as', context.user.name);
         return Response.redirect(handoff.toString(), 302);
       }
-      const html = loginHtml.replace('__REDIRECT_ALLOWLIST__', '[]');
-      return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
+      const home = new URL('/', url.origin);
+      home.searchParams.set('login', '1');
+      const redirect = url.searchParams.get('redirect');
+      if (redirect) home.searchParams.set('redirect', redirect);
+      home.hash = 'login';
+      return Response.redirect(home.toString(), 302);
     }
 
     // 静态资源（仅 GET）
+    if (method === 'GET' && url.pathname === '/assets/home.css') {
+      return new Response(homeCss, { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    }
+    if (method === 'GET' && url.pathname === '/assets/home.bundle.js') {
+      return new Response(homeBundleJs, { headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    }
+    if (method === 'GET' && url.pathname === '/assets/workbench-motion.bundle.js') {
+      return new Response(workbenchMotionJs, { headers: { 'Content-Type': 'text/javascript; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
+    }
+    if (method === 'GET' && url.pathname === '/assets/workbench-hero.webp') {
+      return new Response(workbenchHero, { headers: { 'Content-Type': 'image/webp', 'Cache-Control': 'public, max-age=31536000, immutable' } });
+    }
     if (method === 'GET' && url.pathname === '/assets/styles.css') {
       return new Response(stylesCss, { headers: { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'public, max-age=3600' } });
     }
@@ -207,11 +227,23 @@ export default {
       });
     }
 
-    // 工作台首页：未登录重定向到登录页
-    if (method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
+    // 公共门户
+    if (method === 'GET' && url.pathname === '/') {
+      return new Response(homeHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
+    }
+    if (method === 'GET' && url.pathname === '/index.html') {
+      return Response.redirect(new URL('/', url.origin).toString(), 302);
+    }
+
+    // 已登录工作台
+    if (method === 'GET' && url.pathname === '/workbench') {
       const { user } = await currentUser(request, env);
       if (!user) {
-        return Response.redirect(new URL('/login', url.origin).toString(), 302);
+        const home = new URL('/', url.origin);
+        home.searchParams.set('login', '1');
+        home.searchParams.set('redirect', '/workbench');
+        home.hash = 'login';
+        return Response.redirect(home.toString(), 302);
       }
       return new Response(indexHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' } });
     }
@@ -267,7 +299,7 @@ export default {
         return new Response(null, {
           status: 302,
           headers: {
-            'Location': new URL('/login', url.origin).toString(),
+            'Location': new URL('/?login=1#login', url.origin).toString(),
             'Cache-Control': 'no-store',
             'Set-Cookie': buildLogoutCookie(request, env),
           },

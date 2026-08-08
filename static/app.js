@@ -117,7 +117,8 @@
     $('transitionName').textContent = app.name;
     $('transitionDomain').textContent = new URL(app.url).hostname;
     $('transitionStatus').textContent = '验证工作台会话';
-    $('embedLoading').style.display = 'grid';
+    if (window.CalpherMotion) window.CalpherMotion.transitionScreen(true);
+    else $('embedLoading').style.display = 'grid';
     state.loadingTimers.push(setTimeout(() => {
       $('transitionStatus').textContent = '建立安全连接';
     }, 520));
@@ -128,7 +129,8 @@
 
   function hideTransition() {
     clearLoadingTimers();
-    $('embedLoading').style.display = 'none';
+    if (window.CalpherMotion) window.CalpherMotion.transitionScreen(false);
+    else $('embedLoading').style.display = 'none';
   }
 
   function openShortcut(app) {
@@ -142,7 +144,7 @@
     selectDetail(id);
     closeDrawer();
     if (app.kind === 'shortcut') return openShortcut({ ...app, id });
-    if (!app.url || app.url === '/') {
+    if (id === 'workbench' || !app.url) {
       exitEmbed();
       return;
     }
@@ -151,7 +153,7 @@
 
   async function enterEmbed(id) {
     const app = state.apps[id];
-    if (!app || !app.url || app.url === '/') return;
+    if (!app || id === 'workbench' || !app.url) return;
     if (isMobile()) {
       location.href = app.kind === 'shortcut'
         ? themedTarget(app, { fromWorkbench: true }).toString()
@@ -174,9 +176,13 @@
         Cn.toast(e.message || '子项目鉴权初始化失败');
       }
     });
-    $('appShell').classList.add('embed-view');
-    selectDetail(id);
-    setDetailsCollapsed(true, false);
+    const mutate = () => {
+      $('appShell').classList.add('embed-view', 'details-collapsed');
+      selectDetail(id);
+      $('appShell').classList.add('details-collapsed');
+    };
+    if (window.CalpherMotion) await window.CalpherMotion.transitionView('embed', mutate);
+    else mutate();
   }
 
   function exitEmbed() {
@@ -184,10 +190,13 @@
     hideTransition();
     $('embedFrame').removeAttribute('src');
     $('embedTitle').textContent = '加载中…';
-    $('appShell').classList.remove('embed-view');
-    $('appShell').classList.remove('details-available');
-    const owner = displayName();
-    $('pageTitleMain').textContent = state.asUser ? `${owner} 的工作台` : `${owner} 工作台`;
+    const mutate = () => {
+      $('appShell').classList.remove('embed-view', 'details-available');
+      const owner = displayName();
+      $('pageTitleMain').textContent = state.asUser ? `${owner} 的工作台` : `${owner} 工作台`;
+    };
+    if (window.CalpherMotion) window.CalpherMotion.transitionView('local', mutate);
+    else mutate();
   }
 
   const embedFrameEl = $('embedFrame');
@@ -266,6 +275,7 @@
     $('primaryNav').querySelectorAll('.nav-item').forEach((button) => {
       button.addEventListener('click', () => openItem(button.dataset.id));
     });
+    if (window.CalpherMotion) window.CalpherMotion.navRendered($('primaryNav'));
   }
 
   function renderMetrics() {
@@ -280,17 +290,7 @@
       `<article class="metric-card" data-material="rain"><span>WORKSPACE / 空间</span><h3>当前工作台</h3><strong>${esc(owner)}</strong><p>${state.asUser ? '管理员查看成员空间' : '当前账号的独立配置'}</p></article>`,
       `<article class="metric-card" data-material="chrome"><span>AUTH / 身份</span><h3>当前会话</h3><strong>${state.user && state.user.role === 'admin' ? 'ADMIN' : 'USER'}</strong><p>${esc(displayName(state.user))}</p></article>`,
     ].join('');
-    initMetricMotion($('metricGrid'));
-  }
-
-  function initMetricMotion(container) {
-    container.querySelectorAll('.metric-card').forEach((card) => {
-      card.addEventListener('pointermove', (event) => {
-        const rect = card.getBoundingClientRect();
-        card.style.setProperty('--pointer-x', `${((event.clientX - rect.left) / rect.width) * 100}%`);
-        card.style.setProperty('--pointer-y', `${((event.clientY - rect.top) / rect.height) * 100}%`);
-      });
-    });
+    if (window.CalpherMotion) window.CalpherMotion.metricsRendered($('metricGrid'));
   }
 
   function itemRow([id, app]) {
@@ -314,6 +314,7 @@
     $('projectList').querySelectorAll('.queue-item').forEach((button) => {
       button.addEventListener('click', () => openItem(button.dataset.id));
     });
+    if (window.CalpherMotion) window.CalpherMotion.queueRendered($('projectList'));
   }
 
   function renderProjectGrid(filter = '') {
@@ -323,6 +324,7 @@
     $('projectCount').textContent = `${entries.length} 个`;
     if (!entries.length) {
       $('projectGrid').innerHTML = '<p class="project-empty">没有匹配的子站</p>';
+      if (window.CalpherMotion) window.CalpherMotion.projectsRendered($('projectGrid'));
       return;
     }
     $('projectGrid').innerHTML = entries.map(([id, app]) => `<a class="project-card" href="${esc(app.url)}" data-id="${esc(id)}">
@@ -336,23 +338,24 @@
         openItem(card.dataset.id);
       });
     });
+    if (window.CalpherMotion) window.CalpherMotion.projectsRendered($('projectGrid'));
   }
 
   function selectDetail(id) {
     const app = state.apps[id] || state.apps.workbench;
     if (!app) return;
+    const isWorkbench = id === 'workbench';
     state.selected = id;
     document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.id === id));
     $('detailsHeadingTitle').textContent = `${app.name} 详情`;
     $('detailTitle').textContent = app.name;
     $('detailDescription').textContent = app.description || '';
-    $('detailDomain').textContent = app.url === '/' ? location.hostname.replace(/^www\./, '') : new URL(app.url).hostname;
-    $('detailStatus').textContent = app.url === '/' ? '主站' : '在线';
+    $('detailDomain').textContent = isWorkbench ? location.hostname.replace(/^www\./, '') : new URL(app.url, location.origin).hostname;
+    $('detailStatus').textContent = isWorkbench ? '主站' : '在线';
     $('detailUser').textContent = state.workspaceUser ? `${displayName(state.workspaceUser)} · ${state.workspaceUser.role}` : '未登录';
-    $('detailMode').textContent = app.kind === 'shortcut' ? '网站导航 / 桌面窗口' : app.url === '/' ? '主站会话' : '独立密钥统一鉴权';
+    $('detailMode').textContent = app.kind === 'shortcut' ? '网站导航 / 桌面窗口' : isWorkbench ? '主站会话' : '独立密钥统一鉴权';
     $('detailTheme').textContent = resolvedTheme() === 'light' ? '亮色' : '暗色';
-    $('openWorkbenchBtn').innerHTML = `<svg><use href="#i-check"/></svg>${app.url === '/' ? '工作台首页' : app.kind === 'shortcut' ? '访问网址' : '打开项目'}`;
-    const isWorkbench = app.url === '/';
+    $('openWorkbenchBtn').innerHTML = `<svg><use href="#i-check"/></svg>${isWorkbench ? '工作台首页' : app.kind === 'shortcut' ? '访问网址' : '打开项目'}`;
     const details = String(app.details || '').trim();
     $('appShell').classList.toggle('details-available', isWorkbench || Boolean(details));
     $('detailNote').hidden = !isWorkbench && !details;
@@ -368,6 +371,7 @@
       }
       setDetailsCollapsed(collapsed, false);
     }
+    if (window.CalpherMotion) window.CalpherMotion.detailChanged();
   }
 
   function renderUser() {
@@ -628,15 +632,23 @@
     if (!modalBody) return;
     modalBody.innerHTML = body;
     bindSettingsEvents(integrations, shortcuts);
+    if (window.CalpherMotion) window.CalpherMotion.settingsLoaded();
   }
 
   function switchSettingsTab(active) {
-    document.querySelectorAll('.settings-tabs button').forEach((button) => {
-      button.classList.toggle('active', button.dataset.tab === active);
-    });
-    document.querySelectorAll('.settings-panel').forEach((panel) => {
-      panel.classList.toggle('active', panel.dataset.panel === active);
-    });
+    const current = document.querySelector('.settings-panel.active');
+    const next = document.querySelector(`.settings-panel[data-panel="${CSS.escape(active)}"]`);
+    if (!next || current === next) return;
+    const mutate = () => {
+      document.querySelectorAll('.settings-tabs button').forEach((button) => {
+        button.classList.toggle('active', button.dataset.tab === active);
+      });
+      document.querySelectorAll('.settings-panel').forEach((panel) => {
+        panel.classList.toggle('active', panel.dataset.panel === active);
+      });
+    };
+    if (window.CalpherMotion) window.CalpherMotion.switchPanel(current, next, mutate);
+    else mutate();
   }
 
   function bindSettingsEvents(integrations, shortcuts) {
@@ -800,7 +812,7 @@
       if (!await confirmAction('删除我的账号', '账号、项目接入、网站导航和工作台数据将被永久删除。', '永久删除')) return;
       try {
         await fetchJSON('/api/account', { method: 'DELETE' });
-        location.href = '/login';
+        location.href = '/?login=1&redirect=%2Fworkbench#login';
       } catch (e) { Cn.toast(e.message); }
     });
   }
@@ -811,7 +823,10 @@
 
   $('searchInput').addEventListener('input', () => renderProjectGrid($('searchInput').value));
   document.querySelectorAll('#settingsBtn, #settingsBtn2, #settingsSidebarBtn').forEach((button) => {
-    button.addEventListener('click', () => openSettings().catch((e) => Cn.toast(e.message)));
+    button.addEventListener('click', () => {
+      if (button.id === 'settingsSidebarBtn') closeDrawer();
+      openSettings().catch((e) => Cn.toast(e.message));
+    });
   });
   $('logoutBtn').addEventListener('click', doLogout);
   $('refreshBtn').addEventListener('click', async () => {
@@ -843,11 +858,21 @@
     } catch (e) {}
   }
   $('sidebarCollapseBtn').addEventListener('click', () => {
-    setSidebarCollapsed(!shell.classList.contains('sidebar-collapsed'));
+    const mutate = () => setSidebarCollapsed(!shell.classList.contains('sidebar-collapsed'));
+    if (window.CalpherMotion) window.CalpherMotion.layoutChange(mutate);
+    else mutate();
     closeDrawer();
   });
-  $('detailsCollapseBtn').addEventListener('click', () => setDetailsCollapsed(!shell.classList.contains('details-collapsed')));
-  $('detailsRestoreBtn').addEventListener('click', () => setDetailsCollapsed(false));
+  $('detailsCollapseBtn').addEventListener('click', () => {
+    const mutate = () => setDetailsCollapsed(!shell.classList.contains('details-collapsed'));
+    if (window.CalpherMotion) window.CalpherMotion.layoutChange(mutate);
+    else mutate();
+  });
+  $('detailsRestoreBtn').addEventListener('click', () => {
+    const mutate = () => setDetailsCollapsed(false);
+    if (window.CalpherMotion) window.CalpherMotion.layoutChange(mutate);
+    else mutate();
+  });
 
   Cn.initThemeToggle('#themeToggleBtn');
   window.addEventListener('calpher:themechange', () => {
@@ -880,8 +905,9 @@
 
   try {
     await loadWorkspace();
+    if (window.CalpherMotion) window.CalpherMotion.pageReady();
   } catch (e) {
-    location.href = '/login';
+    location.href = '/?login=1&redirect=%2Fworkbench#login';
     return;
   }
 

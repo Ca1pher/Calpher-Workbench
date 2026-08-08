@@ -1,7 +1,7 @@
 {
   "workbench": {
     "name": "个人工作台",
-    "url": "/",
+    "url": "/workbench",
     "icon": "home",
     "description": "Calpher 个人工作台首页"
   },

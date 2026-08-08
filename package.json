@@ -4,12 +4,21 @@
   "private": true,
   "description": "Calpher 个人工作台 — Cloudflare Worker",
   "scripts": {
+    "build:home": "esbuild static/home-runtime.entry.js --bundle --format=iife --platform=browser --target=es2018 --minify --outfile=static/home.bundle.js",
+    "build:workbench": "esbuild static/workbench-motion.entry.js --bundle --format=iife --platform=browser --target=es2018 --minify --outfile=static/workbench-motion.bundle.js",
+    "build": "npm run build:home && npm run build:workbench",
+    "predev": "npm run build",
     "dev": "wrangler dev",
+    "predeploy": "npm run build",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
     "test": "node --experimental-default-type=module --test auth/auth.test.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.28.1",
     "wrangler": "^4.95.0"
+  },
+  "dependencies": {
+    "gsap": "^3.15.0"
   }
 }
