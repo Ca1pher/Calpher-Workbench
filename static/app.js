@@ -24,6 +24,7 @@
          <span class="cn-live-dot"></span><span>${app.name}</span>
        </button>`
     ).join('');
+    nav.querySelectorAll('.cn-nav-item').forEach((btn) => btn.addEventListener('click', closeDrawer));
   }
 
   function renderMetrics() {
@@ -97,4 +98,12 @@
   try { await checkAuth(); } catch (e) {}
   try { await loadApps(); } catch (e) { Cn.toast('加载项目失败'); }
   Cn.initThemeToggle('#themeToggleBtn');
+
+  const sidebar = document.querySelector('.cn-sidebar');
+  const backdrop = document.getElementById('drawerBackdrop');
+  const burger = document.getElementById('burgerBtn');
+  function openDrawer() { sidebar.classList.add('open'); backdrop.classList.add('show'); }
+  function closeDrawer() { sidebar.classList.remove('open'); backdrop.classList.remove('show'); }
+  burger.addEventListener('click', () => sidebar.classList.contains('open') ? closeDrawer() : openDrawer());
+  backdrop.addEventListener('click', closeDrawer);
 })();

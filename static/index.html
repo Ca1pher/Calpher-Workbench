@@ -18,13 +18,14 @@
 </head>
 <body>
   <main class="cn-app-shell">
-    <aside class="cn-sidebar">
+    <aside class="cn-sidebar cn-panel">
       <div class="cn-brand">Calpher Workbench</div>
       <nav class="cn-primary-nav" aria-label="主导航" id="primaryNav"></nav>
       <div class="cn-sidebar-bottom" id="userBox"></div>
     </aside>
-    <section class="cn-core">
+    <section class="cn-core cn-panel">
       <header class="cn-topbar">
+        <button id="burgerBtn" class="cn-round-btn cn-burger" aria-label="打开菜单">☰</button>
         <div class="cn-page-title"><h1>Calpher Workbench</h1><p>统一接入 · 共享登录 · 独立部署</p></div>
         <div class="cn-top-actions">
           <button id="themeToggleBtn" class="cn-round-btn" aria-label="切换显示主题">☾</button>
@@ -34,6 +35,7 @@
       <section class="cn-metric-grid" id="metricGrid"></section>
       <section class="cn-project-grid" id="projectGrid"></section>
     </section>
+    <div class="cn-drawer-backdrop" id="drawerBackdrop"></div>
   </main>
   <script src="/assets/components.js"></script>
   <script src="/app.js"></script>
