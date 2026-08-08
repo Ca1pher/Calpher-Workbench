@@ -3,6 +3,10 @@ main = "worker.js"
 compatibility_date = "2026-05-31"
 workers_dev = true
 
+rules = [
+  { type = "Text", globs = ["**/*.html", "**/static/app.js", "**/design-system/components.js", "**/design-system/styles.css", "**/apps.json"], fallthrough = true }
+]
+
 [vars]
 # 父域名（占位）：共享 Cookie 的 Domain 属性。正式域名确定后改这里。
 PARENT_DOMAIN = "example.dev"
