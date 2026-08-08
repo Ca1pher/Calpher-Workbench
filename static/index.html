@@ -15,7 +15,7 @@
         document.documentElement.dataset.accent = ['emerald','ocean','iris','amber','sakura'].includes(a) ? a : 'ocean';
       })();
     </script>
-    <link rel="stylesheet" href="/assets/styles.css?v=2" />
+    <link rel="stylesheet" href="/assets/styles.css?v=3" />
   </head>
   <body>
     <svg class="svg-sprite" aria-hidden="true">
@@ -40,10 +40,10 @@
       <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
     </svg>
 
-    <main class="app-shell">
-      <aside class="sidebar panel">
+    <main class="app-shell" id="appShell">
+      <aside class="sidebar panel" id="sidebar">
         <div class="brand"><strong>Calpher</strong><span>Workbench OS</span></div>
-        <button id="burgerBtn" class="round-btn burger" aria-label="打开菜单"><svg><use href="#i-list"/></svg></button>
+        <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" aria-label="收起或展开侧边栏" title="收起侧边栏"><svg><use href="#i-chevron"/></svg></button>
         <nav class="primary-nav" aria-label="主导航" id="primaryNav"></nav>
         <div class="sidebar-bottom">
           <div class="path-heading"><span>工作台空间</span><button id="settingsSidebarBtn" aria-label="设置">⚙</button></div>
@@ -53,6 +53,7 @@
 
       <section class="core">
         <header class="topbar">
+          <button id="burgerBtn" class="round-btn burger" aria-label="打开菜单"><svg><use href="#i-list"/></svg></button>
           <div class="page-title"><h1>个人工作台</h1><p>统一接入 · 共享登录 · 独立部署</p></div>
           <label class="search-box"><svg><use href="#i-search"/></svg><input id="searchInput" aria-label="搜索项目" placeholder="搜索项目…"/></label>
           <div class="top-actions">
@@ -81,15 +82,19 @@
         </div>
       </section>
 
-      <aside class="details-panel panel">
-        <div class="details-heading"><h2>✦ 工作台详情</h2><button id="refreshBtn" aria-label="刷新"><svg><use href="#i-spark"/></svg></button></div>
-        <div class="details-content">
+      <aside class="details-panel panel" id="detailsPanel">
+        <div class="details-heading">
+          <h2 id="detailsHeadingTitle">✦ 工作台详情</h2>
+          <div class="details-head-actions">
+            <button id="detailsCollapseBtn" class="details-collapse" aria-label="收起详情" title="收起详情"><svg><use href="#i-chevron"/></svg></button>
+          </div>
+        </div>
+        <div class="details-content" id="detailsContent">
           <div class="detail-title-row"><h2 id="detailTitle">Calpher Workbench</h2><span id="detailStatus">在线</span></div>
           <p class="detail-description" id="detailDescription">Calpher 个人云计算工作台，聚合在 Cloudflare Workers 上独立部署的服务，统一接入共享登录与统一视觉。</p>
           <dl class="metadata">
-            <div><dt>接入方</dt><dd><span class="mini-avatar">CP</span>Calpher</dd></div>
             <div><dt>登录会话</dt><dd><svg><use href="#i-user"/></svg><span id="detailUser">未登录</span></dd></div>
-            <div><dt>鉴权模式</dt><dd><i class="status-dot"></i><span>独立账号</span></dd></div>
+            <div><dt>鉴权模式</dt><dd><i class="status-dot"></i><span id="detailMode">独立账号</span></dd></div>
             <div><dt>当前主题</dt><dd><i class="priority-dot"></i><span id="detailTheme">暗色</span></dd></div>
             <div><dt>父域</dt><dd><svg><use href="#i-folder"/></svg><span id="detailDomain">—</span></dd></div>
           </dl>
@@ -104,7 +109,7 @@
           </article>
         </div>
         <footer class="detail-actions">
-          <button id="refreshBtn2"><svg><use href="#i-spark"/></svg>刷新数据</button>
+          <button id="refreshBtn"><svg><use href="#i-spark"/></svg>刷新数据</button>
           <button class="primary" id="openWorkbenchBtn"><svg><use href="#i-check"/></svg>工作台首页</button>
           <button class="more" aria-label="更多" id="settingsBtn2"><svg><use href="#i-more"/></svg></button>
         </footer>
@@ -112,7 +117,7 @@
     </main>
 
     <div id="toast" class="toast" role="status"></div>
-    <script src="/assets/components.js?v=2"></script>
-    <script src="/app.js?v=2"></script>
+    <script src="/assets/components.js?v=3"></script>
+    <script src="/app.js?v=3"></script>
   </body>
 </html>

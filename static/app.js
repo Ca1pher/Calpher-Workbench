@@ -1,5 +1,5 @@
 (async function () {
-  const state = { apps: {}, user: null };
+  const state = { apps: {}, user: null, selected: 'workbench' };
   const $ = (id) => document.getElementById(id);
 
   async function fetchJSON(url, opts) {
@@ -22,6 +22,7 @@
     renderMetrics();
     renderProjectList();
     renderProjectGrid();
+    selectDetail(state.selected);
   }
 
   function renderNav() {
@@ -39,6 +40,8 @@
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         const app = state.apps[id];
+        selectDetail(id);
+        nav.querySelectorAll('.nav-item').forEach((b) => b.classList.toggle('active', b === btn));
         closeDrawer();
         openApp(app, id);
       });
@@ -87,6 +90,7 @@
     </div>`;
     list.querySelectorAll('.queue-item').forEach((btn) => btn.addEventListener('click', () => {
       const app = state.apps[btn.dataset.id];
+      selectDetail(btn.dataset.id);
       closeDrawer();
       openApp(app, btn.dataset.id);
     }));
@@ -108,6 +112,45 @@
         <div class="pc-url">${app.url}</div>
       </a>`;
     }).join('');
+    grid.querySelectorAll('.project-card').forEach((card) => card.addEventListener('click', () => selectDetail(card.dataset.id)));
+  }
+
+  function selectDetail(id) {
+    const app = state.apps[id] || state.apps['workbench'];
+    if (!app) return;
+    state.selected = id;
+    $('detailsHeadingTitle').textContent = '✦ ' + app.name + ' 详情';
+    $('detailTitle').textContent = app.name;
+    $('detailDescription').textContent = app.description || '';
+    $('detailDomain').textContent = app.url === '/' ? (location.hostname.replace(/^www\./, '') || '—') : app.url.replace(/^https?:\/\//, '');
+    $('detailStatus').textContent = app.url === '/' ? '主站' : '在线';
+    $('detailUser').textContent = state.user ? (state.user.name + ' · ' + state.user.role) : '未登录';
+    $('detailMode').textContent = '独立账号';
+    const open = $('openWorkbenchBtn');
+    open.innerHTML = '<svg><use href="#i-check"/></svg>' + (app.url === '/' ? '工作台首页' : '打开项目');
+  }
+
+  function showDocs() {
+    Cn.openModal({
+      title: '接入说明',
+      body: `<div style="font-size:12px;line-height:1.8;color:#aab3ae;display:flex;flex-direction:column;gap:12px">
+        <p style="margin:0">本工作台为 <b>Calpher Workbench</b>，聚合你在 Cloudflare 上独立部署的各子服务，统一共享登录与统一视觉。</p>
+        <div>
+          <h4 style="margin:0 0 4px;font-size:12px;color:var(--accent-300)">如何接入一个新项目？</h4>
+          <ol style="margin:0;padding-left:18px">
+            <li>子项目独立部署在 Cloudflare，自建站点与自定义域名</li>
+            <li>在 <code>apps.json</code> 注册表中登记名称、URL 与图标类型</li>
+            <li>共享登录：父域 Cookie（<code>kypher72.indevs.in</code>）一处登录，全站可用</li>
+            <li>统一视觉：引用工作台的 <code>styles.css</code> 与 <code>components.js</code>，获取相同的主题、强调色与组件</li>
+          </ol>
+        </div>
+        <div>
+          <h4 style="margin:0 0 4px;font-size:12px;color:var(--accent-300)">登录说明</h4>
+          <p style="margin:0">账号/密码由主站 <code>AUTH_MASTER_PASS / AUTH_MASTER_TOKEN</code> 环境变量配置，请部署方妥善保管。</p>
+        </div>
+      </div>`,
+      buttons: [{ text: '关闭', onClick: Cn.closeModal }],
+    });
   }
 
   async function checkAuth() {
@@ -175,16 +218,47 @@
   $('refreshBtn').addEventListener('click', async () => {
     try { await loadApps(); Cn.toast('数据已刷新'); } catch (e) { Cn.toast('刷新失败'); }
   });
-  $('refreshBtn2').addEventListener('click', async () => {
-    try { await loadApps(); Cn.toast('数据已刷新'); } catch (e) { Cn.toast('刷新失败'); }
+  $('openWorkbenchBtn').addEventListener('click', () => {
+    const app = state.apps[state.selected];
+    if (app && app.url && app.url !== '/') { window.open(app.url, '_blank', 'noopener'); return; }
+    location.href = '/';
   });
-  $('openWorkbenchBtn').addEventListener('click', () => { location.href = '/'; });
-  $('detailDocsBtn').addEventListener('click', () => location.href = '/login');
-  $('detailDomain').textContent = location.hostname.replace(/^www\./, '') || '—';
+  $('detailDocsBtn').addEventListener('click', showDocs);
+
+  const shell = $('appShell');
+  const mqMobile = matchMedia('(max-width: 1180px)');
+  function setSidebarCollapsed(c) {
+    shell.classList.toggle('sidebar-collapsed', c);
+    try { localStorage.setItem('calpher-workbench-sidebar', c ? '1' : '0'); } catch (e) {}
+  }
+  function setDetailsCollapsed(c) {
+    shell.classList.toggle('details-collapsed', c);
+    try { localStorage.setItem('calpher-workbench-details', c ? '1' : '0'); } catch (e) {}
+  }
+  function restoreLayout() {
+    if (mqMobile.matches) return;
+    try {
+      if (localStorage.getItem('calpher-workbench-sidebar') === '1') setSidebarCollapsed(true);
+      if (localStorage.getItem('calpher-workbench-details') === '1') setDetailsCollapsed(true);
+    } catch (e) {}
+  }
+  $('sidebarCollapseBtn').addEventListener('click', () => {
+    setSidebarCollapsed(!shell.classList.contains('sidebar-collapsed'));
+    closeDrawer();
+  });
+  $('detailsCollapseBtn').addEventListener('click', () => setDetailsCollapsed(!shell.classList.contains('details-collapsed')));
 
   try { await checkAuth(); } catch (e) {}
   try { await loadApps(); } catch (e) { Cn.toast('加载项目失败'); }
   Cn.initThemeToggle('#themeToggleBtn');
+  restoreLayout();
+  mqMobile.addEventListener('change', () => {
+    if (mqMobile.matches) {
+      shell.classList.remove('sidebar-collapsed', 'details-collapsed');
+    } else {
+      restoreLayout();
+    }
+  });
 
   const sidebar = document.querySelector('.sidebar');
   const backdrop = document.createElement('div');
