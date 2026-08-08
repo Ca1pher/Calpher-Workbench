@@ -212,6 +212,24 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .project-card .pc-url { margin-top: 8px; font: 9px/1.3 ui-monospace, monospace; color: #78837e; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .project-empty { grid-column: 1 / -1; display: grid; place-items: center; color: #6e7773; font-size: 12px; height: 100%; }
 
+/* 嵌入视图 */
+.back-btn { display: none; }
+.back-btn svg { transform: rotate(180deg); }
+.embed-host { display: none; flex-direction: column; min-height: 0; }
+.embed-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 2px 10px; }
+.embed-title { font-size: 12px; color: #8f9894; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.embed-open { font-size: 11px; color: var(--accent-300); text-decoration: none; white-space: nowrap; }
+.embed-open:hover { text-decoration: underline; }
+.embed-frame { position: relative; flex: 1; min-height: 0; border-radius: 17px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); background: #fff; }
+.embed-iframe { width: 100%; height: 100%; border: 0; background: #fff; display: block; }
+.embed-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #8f9894; font-size: 12px; background: rgba(5,9,7,.6); z-index: 2; }
+
+/* 嵌入视图状态（app.js 在 .app-shell 上切换 class） */
+.app-shell.embed-view .back-btn { display: grid; }
+.app-shell.embed-view .metric-grid, .app-shell.embed-view .workspace-grid, .app-shell.embed-view .search-box { display: none; }
+.app-shell.embed-view .embed-host { display: flex; }
+.app-shell.embed-view .core { grid-template-rows: 70px minmax(0, 1fr); }
+
 /* 详情面板 */
 .details-panel { min-height: 0; display: grid; grid-template-rows: 62px minmax(0,1fr) 66px; overflow: hidden; }
 .details-heading { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid rgba(255,255,255,.075); background: rgba(255,255,255,.015); }
@@ -382,6 +400,8 @@ html[data-theme="light"] .cn-btn-primary { color: var(--accent-foreground); bord
 html[data-theme="light"] .cn-toast { color: var(--accent-700); border-color: rgb(var(--accent-rgb) / .23); background: color-mix(in srgb, var(--accent-50) 96%, transparent); }
 html[data-theme="light"] .login-field input { border-color: rgba(40,74,59,.16); background: rgba(255,255,255,.72); }
 html[data-theme="light"] .login-hint { color: #7a8780; }
+html[data-theme="light"] .embed-frame { border-color: rgba(35,70,53,.14); background: #fff; }
+html[data-theme="light"] .embed-title { color: #75827b; }
 
 /* 关键帧 */
 @keyframes pulse { 0%,100% { opacity: .45; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.1); } }
@@ -410,6 +430,7 @@ html[data-theme="light"] .login-hint { color: #7a8780; }
   .metric-card strong { font-size: 32px; }
   .nav-item { height: 44px; }
   .details-heading { height: 54px; }
+  .app-shell.embed-view .core { grid-template-rows: 58px minmax(0, 1fr); }
 }
 
 @media (max-width: 1180px) {
@@ -442,6 +463,10 @@ html[data-theme="light"] .login-hint { color: #7a8780; }
   .detail-actions { grid-template-columns: 1fr 1.4fr; }
   .detail-actions .more { display: none; }
   .project-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  .app-shell.embed-view .core { grid-template-rows: auto minmax(0, 1fr); }
+  .app-shell.embed-view .details-panel { display: none; }
+  .app-shell.embed-view .topbar { grid-template-columns: 44px 44px minmax(0, 1fr) auto; }
+  .embed-frame { border-radius: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
