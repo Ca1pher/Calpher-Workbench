@@ -1,0 +1,14 @@
+{
+  "name": "calpher-workbench",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Calpher 个人工作台 — Cloudflare Worker",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.95.0"
+  }
+}
