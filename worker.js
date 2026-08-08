@@ -24,7 +24,8 @@ export default {
 
     // 登录页（无需鉴权）
     if (method === 'GET' && url.pathname === '/login') {
-      const registry = JSON.parse(appsJson);
+      let registry;
+      try { registry = JSON.parse(appsJson); } catch (e) { registry = []; }
       const allowlist = Object.values(registry)
         .map((a) => a.url)
         .filter((u) => u && u !== '/' && u.startsWith('http'))
