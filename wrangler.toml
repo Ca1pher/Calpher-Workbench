@@ -10,7 +10,12 @@ rules = [
   { type = "Text", globs = ["**/*.html", "**/static/app.js", "**/design-system/components.js", "**/design-system/styles.css", "**/apps.json"], fallthrough = true }
 ]
 
+[[kv_namespaces]]
+binding = "WORKBENCH_KV"
+id = "40ab31dd4ade4a52acf39c567983e22a"
+
 [vars]
-# 统一父域名：共享 Cookie（calpher_auth / calpher_prefs）的 Domain 属性。
-# 工作台在 www.kypher72.indevs.in，子项目用其子域名，跨子域共享登录与主题。
+# 主站自身也声明权威 origin，使三站使用同一套模式判定与登录地址。
+AUTH_MASTER_ORIGIN = "https://www.kypher72.indevs.in"
+# 同父域部署可共享 Cookie；当前异域子站仍通过签名 handoff 接入。
 PARENT_DOMAIN = "kypher72.indevs.in"

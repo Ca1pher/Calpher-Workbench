@@ -1,109 +1,218 @@
 const enc = new TextEncoder();
-let secretWarned = false;
+let warnedPartialConfig = false;
 
-function sessionSecret(env) {
-  const secret = env.AUTH_COOKIE_SECRET || 'dev-insecure-secret';
-  if (secret === 'dev-insecure-secret' && !secretWarned) {
-    secretWarned = true;
-    console.warn('[auth] AUTH_COOKIE_SECRET 未配置，正在使用公开的 dev-insecure-secret，任何知晓者都可伪造会话。生产部署前必须配置。');
-  }
+export const COOKIE_NAME = 'calpher_auth';
+export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+export const HANDOFF_TTL_SECONDS = 90;
+
+function requiredSecret(env, override) {
+  const secret = String(override || env.AUTH_COOKIE_SECRET || '').trim();
+  if (!secret) throw new Error('AUTH_COOKIE_SECRET 未配置');
   return secret;
 }
 
-async function hmacKey(secret) {
-  return crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+function normalizeOrigin(value) {
+  if (!value) return '';
+  try { return new URL(value).origin; } catch (e) { return ''; }
 }
 
-async function hmac(secret, data) {
-  return crypto.subtle.sign('HMAC', await hmacKey(secret), enc.encode(data));
-}
-
-function toHex(buf) {
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function toBytes(hex) {
-  const out = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-  return out;
-}
-
-export const COOKIE_NAME = 'calpher_auth';
-
-export function buildSessionCookie(sid) {
-  return `${COOKIE_NAME}=${sid}; Domain=${globalThis.PARENT_DOMAIN || 'example.dev'}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${60 * 60 * 24 * 30}`;
-}
-
-export function buildLogoutCookie() {
-  return `${COOKIE_NAME}=; Domain=${globalThis.PARENT_DOMAIN || 'example.dev'}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
-}
-
-async function signSession(env, payload) {
-  const secret = sessionSecret(env);
-  const body = JSON.stringify(payload);
-  const sig = toHex(await hmac(secret, body));
-  return `${typeof Buffer !== 'undefined' ? Buffer.from(body).toString('base64') : btoa(unescape(encodeURIComponent(body)))}.${sig}`;
-}
-
-async function verifySession(env, sid) {
-  if (!sid) return null;
-  const dot = sid.lastIndexOf('.');
-  if (dot < 0) return null;
-  const b64 = sid.slice(0, dot);
-  const sig = sid.slice(dot + 1);
-  const secret = sessionSecret(env);
-  let body;
-  try { body = decodeURIComponent(escape(atob(b64))); } catch (e) { return null; }
-  const valid = await crypto.subtle.verify('HMAC', await hmacKey(secret), toBytes(sig), enc.encode(body));
-  if (!valid) return null;
-  try { return JSON.parse(body); } catch (e) { return null; }
-}
-
-function readCookie(request, name) {
-  const h = request.headers.get('Cookie') || '';
-  for (const part of h.split(';')) {
-    const [k, ...rest] = part.trim().split('=');
-    if (k === name) return rest.join('=');
+export function getAuthMode(env) {
+  const origin = normalizeOrigin(env.AUTH_MASTER_ORIGIN);
+  const secret = String(env.AUTH_COOKIE_SECRET || '').trim();
+  if (Boolean(origin) !== Boolean(secret) && !warnedPartialConfig) {
+    warnedPartialConfig = true;
+    console.warn('[auth] AUTH_MASTER_ORIGIN 与 AUTH_COOKIE_SECRET 未同时配置，已使用独立站模式');
   }
-  return null;
+  return origin && secret ? 'federated' : 'standalone';
 }
 
-export async function authenticate(request, env) {
-  const sid = readCookie(request, COOKIE_NAME);
-  const payload = await verifySession(env, sid);
-  if (!payload) return { user: null, sid: null };
-  return { user: { name: payload.name, role: payload.role || 'user' }, sid };
+async function hmacKey(secret) {
+  return crypto.subtle.importKey(
+    'raw',
+    enc.encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify'],
+  );
+}
+
+function bytesToBase64Url(bytes) {
+  let binary = '';
+  const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+  for (let i = 0; i < view.length; i++) binary += String.fromCharCode(view[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function base64UrlToBytes(value) {
+  const base64 = value.replace(/-/g, '+').replace(/_/g, '/')
+    + '='.repeat((4 - (value.length % 4)) % 4);
+  const binary = atob(base64);
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
+function encodeJson(value) {
+  return bytesToBase64Url(enc.encode(JSON.stringify(value)));
+}
+
+function decodeJson(value) {
+  return JSON.parse(new TextDecoder().decode(base64UrlToBytes(value)));
+}
+
+async function signToken(env, payload, secret) {
+  const body = encodeJson(payload);
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    await hmacKey(requiredSecret(env, secret)),
+    enc.encode(body),
+  );
+  return `${body}.${bytesToBase64Url(signature)}`;
+}
+
+async function verifyToken(env, token, secret) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  try {
+    const valid = await crypto.subtle.verify(
+      'HMAC',
+      await hmacKey(requiredSecret(env, secret)),
+      base64UrlToBytes(parts[1]),
+      enc.encode(parts[0]),
+    );
+    return valid ? decodeJson(parts[0]) : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function readCookies(request, name) {
+  const header = request.headers.get('Cookie') || '';
+  const values = [];
+  for (const part of header.split(';')) {
+    const index = part.indexOf('=');
+    if (index < 0) continue;
+    if (part.slice(0, index).trim() === name) {
+      try {
+        values.push(decodeURIComponent(part.slice(index + 1).trim()));
+      } catch (e) {
+        // Ignore a malformed duplicate and continue looking for a valid session.
+      }
+    }
+  }
+  return values;
+}
+
+function cookieDomain(request, env) {
+  const parent = String(env.PARENT_DOMAIN || '').trim().replace(/^\./, '').toLowerCase();
+  if (!parent || !request) return '';
+  const host = new URL(request.url).hostname.toLowerCase();
+  return host === parent || host.endsWith(`.${parent}`) ? parent : '';
+}
+
+function cookieBase(request, env, maxAge, options = {}) {
+  const domain = cookieDomain(request, env);
+  const partitioned = Boolean(options.partitioned) && !domain;
+  const parts = [
+    'Path=/',
+    'HttpOnly',
+    'Secure',
+    `SameSite=${partitioned || (!domain && getAuthMode(env) === 'federated') ? 'None' : 'Lax'}`,
+    `Max-Age=${maxAge}`,
+  ];
+  if (domain) parts.splice(1, 0, `Domain=${domain}`);
+  if (partitioned) parts.push('Partitioned');
+  return parts.join('; ');
+}
+
+export function buildSessionCookie(sid, request, env, options = {}) {
+  return `${COOKIE_NAME}=${encodeURIComponent(sid)}; ${cookieBase(request, env, SESSION_TTL_SECONDS, options)}`;
+}
+
+export function buildLogoutCookie(request, env, options = {}) {
+  return `${COOKIE_NAME}=; ${cookieBase(request, env, 0, options)}`;
+}
+
+export async function createSession(env, user, now = Date.now()) {
+  const issuedAt = Math.floor(now / 1000);
+  return signToken(env, {
+    v: 1,
+    typ: 'session',
+    sub: String(user.name || user.sub || 'admin'),
+    role: user.role || 'user',
+    iat: issuedAt,
+    exp: issuedAt + SESSION_TTL_SECONDS,
+  });
+}
+
+export async function verifySession(env, sid, now = Date.now()) {
+  const payload = await verifyToken(env, sid);
+  const current = Math.floor(now / 1000);
+  if (!payload || payload.typ !== 'session' || payload.v !== 1) return null;
+  if (!payload.sub || !Number.isFinite(payload.iat) || !Number.isFinite(payload.exp)) return null;
+  if (payload.iat > current + 10 || payload.exp <= current) return null;
+  return { name: payload.sub, role: payload.role || 'user' };
+}
+
+export async function authenticate(request, env, now = Date.now()) {
+  for (const sid of readCookies(request, COOKIE_NAME)) {
+    const user = await verifySession(env, sid, now);
+    if (user) return { user, sid, source: 'calpher' };
+  }
+  return { user: null, sid: null };
 }
 
 export async function loginByMaster(env, name, pass) {
-  // 模式优先级：AUTH_MASTER_PASS 存在即独立模式（本地校验）。
-  // 接入模式（AUTH_MASTER_ORIGIN + AUTH_MASTER_TOKEN）依赖主鉴权中心
-  // 的 federation 接口，当前阶段尚未落地，接入模式暂不可用。
-  const mode = env.AUTH_MASTER_PASS ? 'standalone' : (env.AUTH_MASTER_ORIGIN ? 'federated' : 'none');
-  let ok = false;
-  let displayName = name;
-  if (mode === 'standalone') {
-    ok = name === (env.AUTH_MASTER_NAME || 'admin') && pass === env.AUTH_MASTER_PASS;
-  } else if (mode === 'federated') {
-    // 占位：待主鉴权中心 federation 接口落地后改为向 AUTH_MASTER_ORIGIN 校验。
-    // 当前一律失败，避免配置接入模式却静默走本地空密码校验。
-    ok = false;
-  } else {
-    ok = false;
-  }
+  const expectedName = env.AUTH_MASTER_NAME || 'admin';
+  const ok = Boolean(env.AUTH_MASTER_PASS)
+    && name === expectedName
+    && pass === env.AUTH_MASTER_PASS;
   if (!ok) return { ok: false };
-  const payload = { name: displayName, role: 'admin', iat: Date.now() };
-  const sid = await signSession(env, payload);
-  return { ok: true, user: payload, sid };
+  const user = { name: expectedName, role: 'admin' };
+  return { ok: true, user, sid: await createSession(env, user) };
 }
 
-export async function handleAuthSync(request, env) {
-  if (request.method !== 'POST') return new Response(JSON.stringify({ error: 'method not allowed' }), { status: 405, headers: { 'Content-Type': 'application/json' } });
-  const token = request.headers.get('X-Master-Token');
-  if (token !== env.AUTH_MASTER_TOKEN) {
-    return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+export async function createHandoffTicket(env, user, audience, returnUrl, now = Date.now(), secret = '') {
+  const aud = normalizeOrigin(audience);
+  const target = new URL(returnUrl);
+  if (!aud || target.origin !== aud) throw new Error('handoff audience 不匹配');
+  const issuedAt = Math.floor(now / 1000);
+  return signToken(env, {
+    v: 1,
+    typ: 'handoff',
+    sub: String(user.name || user.sub || 'admin'),
+    role: user.role || 'user',
+    aud,
+    returnUrl: target.toString(),
+    nonce: crypto.randomUUID(),
+    iat: issuedAt,
+    exp: issuedAt + HANDOFF_TTL_SECONDS,
+  }, secret);
+}
+
+export async function verifyHandoffTicket(env, ticket, audience, now = Date.now(), secret = '') {
+  const payload = await verifyToken(env, ticket, secret);
+  const current = Math.floor(now / 1000);
+  const aud = normalizeOrigin(audience);
+  if (!payload || payload.typ !== 'handoff' || payload.v !== 1) return null;
+  if (!payload.sub || !payload.nonce || payload.aud !== aud) return null;
+  if (!Number.isFinite(payload.iat) || !Number.isFinite(payload.exp) || payload.exp <= current) return null;
+  if (payload.iat > current + 10 || current - payload.iat > HANDOFF_TTL_SECONDS + 10) return null;
+  try {
+    if (new URL(payload.returnUrl).origin !== aud) return null;
+  } catch (e) {
+    return null;
   }
-  let body;
-  try { body = await request.json(); } catch (e) { body = null; }
-  return new Response(JSON.stringify({ ok: true, received: body }), { headers: { 'Content-Type': 'application/json' } });
+  return {
+    user: { name: payload.sub, role: payload.role || 'user' },
+    returnUrl: payload.returnUrl,
+    nonce: payload.nonce,
+  };
+}
+
+export function buildMasterLoginUrl(request, env, targetUrl = request.url) {
+  const origin = normalizeOrigin(env.AUTH_MASTER_ORIGIN);
+  if (!origin) return '';
+  const login = new URL('/login', origin);
+  login.searchParams.set('redirect', new URL(targetUrl, request.url).toString());
+  return login.toString();
 }

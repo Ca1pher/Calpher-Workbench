@@ -1,5 +1,7 @@
 # CF 个人工作台 + 统一接入标准 Implementation Plan
 
+> 历史实施计划，不是接入规范。当前唯一权威规范是 `docs/接入标准.md`；本文中的 `AUTH_MASTER_TOKEN`、`/api/auth/sync` 与旧 Cookie 示例已经废弃。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 在本地搭建个人 CF 工作台（octopus 设计语言），并产出设计系统、共享鉴权中间件、项目注册表三件套"接入标准"母版。
@@ -919,13 +921,13 @@ Expected:
 - `GET http://localhost:8787/api/apps` → 返回 apps.json JSON
 - `POST http://localhost:8787/api/auth/login` body `{"name":"admin","pass":"<测试密码>"}` → 需配置 env 测试
 
-配置本地测试 env：在 `wrangler.toml` 的 `[vars]` 增加 `AUTH_MASTER_PASS = "test-pass-123"`（临时，仅本地）。验证登录返回 200 + Set-Cookie。
+配置本地测试 env：在 `.dev.vars` 增加仅用于本地测试的 `AUTH_MASTER_PASS`。验证登录返回 200 + Set-Cookie，不要把真实密码写入 `wrangler.toml` 或文档。
 
 - [ ] **Step 5: 浏览器端到端验证**
 
 在浏览器打开 `http://localhost:8787/`：
 - 页面渲染侧边栏 + 概览卡 + 项目网格
-- 点击登录按钮 → 模态框出现 → 输入 admin/test-pass-123 → 登录成功 toast
+- 点击登录按钮 → 模态框出现 → 输入本地临时测试账号与密码 → 登录成功 toast
 - 刷新页面仍保持登录（Cookie 生效）
 
 - [ ] **Step 6: Commit**
@@ -939,7 +941,7 @@ git -c user.name="calpher" -c user.email="calpher@local" commit -m "feat: worker
 注意：临时测试用的 `AUTH_MASTER_PASS` 提交进 wrangler.toml 不合适。提交前确认把测试密码挪到 `.dev.vars`（gitignored）或提交时保留占位说明。建议在 `wrangler.toml` 注释掉明文密码，改用 `.dev.vars`：
 
 ```bash
-echo 'AUTH_MASTER_PASS = "test-pass-123"' > .dev.vars
+echo 'AUTH_MASTER_PASS = "<local-test-password>"' > .dev.vars
 ```
 
 ---

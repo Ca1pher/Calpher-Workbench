@@ -1,5 +1,7 @@
 # 工作台嵌入框架 + 接入标准文档 Implementation Plan
 
+> 历史实施计划，不是接入规范。当前唯一权威规范是 `docs/接入标准.md`；跨域与 iframe 鉴权按现行 handoff/分区会话方案执行。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 主站工作台支持本地/嵌入双视图（点击子项目在主区域 iframe 渲染，侧边栏保留），实现登录页 redirect 回跳协议，并产出面向第三方业务方的《接入标准》文档。
@@ -17,7 +19,7 @@
 - login redirect 白名单来源：`apps.json` 中 url 非 `/` 的条目 host（去端口）。占位符 `__REDIRECT_ALLOWLIST__`。
 - 部署需走代理：`export http_proxy="http://127.0.0.1:10808" https_proxy="http://127.0.0.1:10808"`；命令 `npx wrangler deploy --domains www.kypher72.indevs.in`。
 - 本地验证：`wrangler dev --port 8787`（注意 8787 可能已被占用，先 `pgrep -fl wrangler` 检查）；CDP 脚本在 `/var/folders/bw/qn56_rh528v26gdqp634rbk40000gn/T/opencode/`。
-- 本地登录 cookie：`curl -s http://127.0.0.1:8787/api/auth/login -H 'Content-Type: application/json' -d '{"name":"admin","pass":"test-pass-123"}'` 取 `Set-Cookie` 中 `calpher_auth=` 值；CDP 用 `Network.setCookie` 注入。
+- 本地登录 cookie：使用仅存放在 `.dev.vars` 的临时测试密码请求 `/api/auth/login`，取 `Set-Cookie` 中 `calpher_auth=` 值；不要把真实密码写进计划、日志或仓库文件。
 - 每次改静态资源后递增 `?v=`，防止用户浏览器缓存旧文件（`assets/styles.css` 缓存头 `public, max-age=3600`）。
 
 ---

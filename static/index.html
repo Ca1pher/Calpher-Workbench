@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#030504" />
     <title>Calpher Workbench</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>
       (() => {
         try { var t = localStorage.getItem('calpher-workbench-theme') || 'dark'; } catch(e) { var t = 'dark'; }
@@ -15,7 +16,7 @@
         document.documentElement.dataset.accent = ['emerald','ocean','iris','amber','sakura'].includes(a) ? a : 'ocean';
       })();
     </script>
-    <link rel="stylesheet" href="/assets/styles.css?v=5" />
+    <link rel="stylesheet" href="/assets/styles.css?v=11" />
   </head>
   <body>
     <svg class="svg-sprite" aria-hidden="true">
@@ -38,11 +39,14 @@
       <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></symbol>
       <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></symbol>
       <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></symbol>
     </svg>
 
     <main class="app-shell" id="appShell">
       <aside class="sidebar panel" id="sidebar">
-        <div class="brand"><strong>Calpher</strong><span>Workbench OS</span></div>
+        <div class="brand"><span class="brand-mark" id="brandMark" aria-hidden="true">C</span><span class="brand-copy"><strong id="brandName">Calpher</strong><small>Workbench</small></span></div>
         <button id="sidebarCollapseBtn" class="sidebar-collapse-btn" aria-label="收起或展开侧边栏" title="收起侧边栏"><svg><use href="#i-chevron"/></svg></button>
         <nav class="primary-nav" aria-label="主导航" id="primaryNav"></nav>
         <div class="sidebar-bottom">
@@ -72,7 +76,7 @@
 
         <div class="workspace-grid">
           <section class="queue-pane">
-            <div class="section-heading"><h2>接入项目</h2><span>点击跳转</span></div>
+            <div class="section-heading"><h2>接入子站</h2><button id="addSiteBtn" class="section-add"><svg><use href="#i-plus"/></svg>添加</button></div>
             <div id="projectList" class="queue-groups"></div>
           </section>
 
@@ -88,7 +92,24 @@
             <a id="embedOpen" class="embed-open" href="#" target="_blank" rel="noopener">在新窗口打开</a>
           </div>
           <div class="embed-frame">
-            <div id="embedLoading" class="embed-loading">正在加载子项目…</div>
+            <div id="embedLoading" class="embed-loading" role="status" aria-live="polite">
+              <div class="embed-transition">
+                <div class="transition-brand">
+                  <span class="transition-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+                  <span>CALPHER SECURE HANDOFF</span>
+                </div>
+                <div class="transition-main">
+                  <span class="transition-kicker">正在进入</span>
+                  <strong id="transitionName">子项目</strong>
+                  <small id="transitionDomain">正在准备目标地址</small>
+                </div>
+                <div class="transition-progress" aria-hidden="true"><i></i></div>
+                <div class="transition-footer">
+                  <span id="transitionStatus">验证工作台会话</span>
+                  <span class="transition-pulse"><i></i><i></i><i></i></span>
+                </div>
+              </div>
+            </div>
             <iframe id="embedFrame" class="embed-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox" title="子项目"></iframe>
           </div>
         </div>
@@ -110,13 +131,14 @@
             <div><dt>当前主题</dt><dd><i class="priority-dot"></i><span id="detailTheme">暗色</span></dd></div>
             <div><dt>父域</dt><dd><svg><use href="#i-folder"/></svg><span id="detailDomain">—</span></dd></div>
           </dl>
-          <article class="ai-note">
-            <h3>关于本工作台</h3>
-            <ul>
-              <li>子项目独立部署在 Cloudflare，通过注册表统一接入</li>
-              <li>共享登录基于父域 Cookie，一处登录全站可用</li>
-              <li>门户壳共享侧边栏迭代计划中，敬请期待</li>
+          <article class="ai-note" id="detailNote">
+            <h3 id="detailNoteTitle">关于本工作台</h3>
+            <ul id="workbenchDetailList">
+              <li>每个子站独立部署，并使用自己的项目密钥接入</li>
+              <li>异域通过短时 handoff 与嵌入分区会话完成统一登录</li>
+              <li>网站导航只作为个人入口，不参与统一鉴权</li>
             </ul>
+            <p id="childDetailText" class="child-detail-text" hidden></p>
             <button id="detailDocsBtn">查看接入说明</button>
           </article>
         </div>
@@ -126,10 +148,11 @@
           <button class="more" aria-label="更多" id="settingsBtn2"><svg><use href="#i-more"/></svg></button>
         </footer>
       </aside>
+      <button id="detailsRestoreBtn" class="details-restore" aria-label="展开项目详情" title="展开项目详情"><svg><use href="#i-chevron"/></svg></button>
     </main>
 
     <div id="toast" class="toast" role="status"></div>
-    <script src="/assets/components.js?v=5"></script>
-    <script src="/app.js?v=5"></script>
+    <script src="/assets/components.js?v=9"></script>
+    <script src="/app.js?v=12"></script>
   </body>
 </html>

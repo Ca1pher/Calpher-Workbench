@@ -6,15 +6,15 @@
     "description": "Calpher 个人工作台首页"
   },
   "socks": {
-    "name": "代理切换台",
+    "name": "住宅 IP 管理",
     "url": "https://socks.kypher.kdns.fr",
     "icon": "switch",
-    "description": "Free Residential IP Proxy Controller"
+    "description": "住宅 IP 节点、出口与代理凭证管理"
   },
   "calpher-sub": {
-    "name": "订阅管理",
+    "name": "VPS 和订阅管理",
     "url": "https://submgr.kypher.ccwu.cc",
     "icon": "sub",
-    "description": "多用户 Clash/V2Ray 订阅编排与分发"
+    "description": "VPS 节点编排与 Clash/V2Ray 订阅管理"
   }
 }
