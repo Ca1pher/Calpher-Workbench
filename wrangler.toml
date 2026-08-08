@@ -3,6 +3,13 @@ main = "worker.js"
 compatibility_date = "2026-05-31"
 workers_dev = true
 
+# 注意：wrangler 4.120.0 把每个 glob 锚定为正则并匹配 esbuild 的导入路径（带 ./ 前缀），
+# 不带 **/ 的精确 glob（如 "static/app.js"）匹配不到 "./static/app.js"，会静默失败。
+# 必须给每个非 html glob 加 **/ 前缀。auth/auth.js 不在此列表，保持 ES module。
+rules = [
+  { type = "Text", globs = ["**/*.html", "**/static/app.js", "**/design-system/components.js", "**/design-system/styles.css", "**/apps.json"], fallthrough = true }
+]
+
 [vars]
 # 统一父域名：共享 Cookie（calpher_auth / calpher_prefs）的 Domain 属性。
 # 工作台在 www.kypher72.indevs.in，子项目用其子域名，跨子域共享登录与主题。
