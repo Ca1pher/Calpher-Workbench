@@ -1,0 +1,20 @@
+{
+  "workbench": {
+    "name": "个人工作台",
+    "url": "/",
+    "icon": "home",
+    "description": "Calpher 个人工作台首页"
+  },
+  "socks": {
+    "name": "代理切换台",
+    "url": "https://socks.example.dev",
+    "icon": "switch",
+    "description": "Free Residential IP Proxy Controller"
+  },
+  "calpher-sub": {
+    "name": "订阅管理",
+    "url": "https://calpher-sub.example.dev",
+    "icon": "sub",
+    "description": "多用户 Clash/V2Ray 订阅编排与分发"
+  }
+}
