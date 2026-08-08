@@ -1,6 +1,7 @@
 (async function () {
   const state = { apps: {}, user: null, selected: 'workbench', view: { mode: 'local' } };
   const $ = (id) => document.getElementById(id);
+  const isMobile = () => window.matchMedia('(max-width: 1180px)').matches;
 
   async function fetchJSON(url, opts) {
     const res = await fetch(url, opts);
@@ -19,15 +20,35 @@
     return app.url + (app.url.includes('?') ? '&' : '?') + 'embed=1';
   }
 
+  // 手机端新开页面时带上来源标识，子项目可据此显示“返回工作台”按鈕
+  function mobileOpenUrl(app) {
+    return app.url + (app.url.includes('?') ? '&' : '?') + 'from=workbench';
+  }
+
   function enterEmbed(id) {
     const app = state.apps[id];
     if (!app || !app.url || app.url === '/') return;
+
+    // 手机端：直接新开页面，不用 iframe
+    if (isMobile()) {
+      window.open(mobileOpenUrl(app), '_blank', 'noopener');
+      return;
+    }
+
     state.view = { mode: 'embed', id };
     $('embedOpen').href = app.url;
     $('embedTitle').textContent = app.name;
     $('pageTitleMain').textContent = app.name;
+
+    // 先清空 src + 显示 loading，避免切换时上个页面残影
+    const frame = $('embedFrame');
+    frame.removeAttribute('src');
     $('embedLoading').style.display = 'grid';
-    $('embedFrame').src = embedUrl(app);
+    // 微任务后再赋新 src，确保浏览器先清空内容
+    requestAnimationFrame(() => {
+      frame.src = embedUrl(app);
+    });
+
     document.getElementById('appShell').classList.add('embed-view');
     selectDetail(id);
   }
