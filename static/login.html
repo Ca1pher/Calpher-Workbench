@@ -39,6 +39,18 @@
   <div id="toast" class="toast" role="status"></div>
   <script src="/assets/components.js?v=3"></script>
   <script>
+    var REDIRECT_ALLOWLIST = __REDIRECT_ALLOWLIST__;
+    function safeRedirect(raw) {
+      if (!raw) return '/';
+      try {
+        var u = new URL(raw, location.origin);
+        if (u.origin === location.origin) return raw;
+        if (u.protocol === 'https:' && REDIRECT_ALLOWLIST.indexOf(u.hostname) !== -1) return raw;
+      } catch (e) {}
+      return '/';
+    }
+  </script>
+  <script>
     (function () {
       var form = document.getElementById('loginForm');
       var err = document.getElementById('loginError');
@@ -55,7 +67,8 @@
           });
           var data = await res.json().catch(function () { return {}; });
           if (!res.ok) throw new Error(data.error || '登录失败');
-          location.href = '/';
+          var target = safeRedirect(new URLSearchParams(location.search).get('redirect'));
+          location.href = target;
         } catch (err2) {
           err.textContent = err2.message;
           err.hidden = false;
