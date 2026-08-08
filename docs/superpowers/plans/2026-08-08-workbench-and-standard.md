@@ -855,7 +855,8 @@ export default {
 
     // 项目注册表
     if (url.pathname === '/api/apps' && method === 'GET') {
-      return json(appsJson);
+      // apps.json 经 Text rule 导入为字符串，需先解析
+      return json(JSON.parse(appsJson));
     }
 
     // 鉴权 API
