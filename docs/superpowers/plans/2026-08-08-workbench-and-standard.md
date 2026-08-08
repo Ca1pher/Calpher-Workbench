@@ -889,8 +889,12 @@ export default {
 - [ ] **Step 3: wrangler.toml 加 Text rules（精确 glob，勿用 `**/*.js`，否则会误伤 `auth/auth.js` 的 ES module 导入）**
 
 ```toml
+# 注意：wrangler 4.120.0 把每个 glob 锚定为正则并匹配 esbuild 的导入路径（带 ./ 前缀），
+# 不带 **/ 的精确 glob（如 "static/app.js"）匹配不到 "./static/app.js"，会静默失败
+# （导入变成模块命名空间对象，路由返回 [object Object] / /api/apps 500）。
+# 必须给每个非 html glob 加 **/ 前缀。auth/auth.js 不在此列表，保持 ES module。
 rules = [
-  { type = "Text", globs = ["**/*.html", "static/app.js", "design-system/components.js", "design-system/styles.css", "apps.json"], fallthrough = true }
+  { type = "Text", globs = ["**/*.html", "**/static/app.js", "**/design-system/components.js", "**/design-system/styles.css", "**/apps.json"], fallthrough = true }
 ]
 ```
 
