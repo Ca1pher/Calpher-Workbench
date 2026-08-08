@@ -1,5 +1,5 @@
 (async function () {
-  const state = { apps: {}, user: null, selected: 'workbench' };
+  const state = { apps: {}, user: null, selected: 'workbench', view: { mode: 'local' } };
   const $ = (id) => document.getElementById(id);
 
   async function fetchJSON(url, opts) {
@@ -13,6 +13,31 @@
     if (!app.url) return;
     if (app.url === '/' || app.url === '') { location.href = '/'; return; }
     window.open(app.url, '_blank', 'noopener');
+  }
+
+  function embedUrl(app) {
+    return app.url + (app.url.includes('?') ? '&' : '?') + 'embed=1';
+  }
+
+  function enterEmbed(id) {
+    const app = state.apps[id];
+    if (!app || !app.url || app.url === '/') return;
+    state.view = { mode: 'embed', id };
+    $('embedOpen').href = app.url;
+    $('embedTitle').textContent = app.name;
+    $('pageTitleMain').textContent = app.name;
+    $('embedLoading').style.display = 'grid';
+    $('embedFrame').src = embedUrl(app);
+    document.getElementById('appShell').classList.add('embed-view');
+    selectDetail(id);
+  }
+
+  function exitEmbed() {
+    state.view = { mode: 'local' };
+    $('embedFrame').removeAttribute('src');
+    $('embedTitle').textContent = '加载中…';
+    document.getElementById('appShell').classList.remove('embed-view');
+    $('pageTitleMain').textContent = '个人工作台';
   }
 
   async function loadApps() {
@@ -39,11 +64,11 @@
     nav.querySelectorAll('.nav-item').forEach((btn) => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
-        const app = state.apps[id];
         selectDetail(id);
         nav.querySelectorAll('.nav-item').forEach((b) => b.classList.toggle('active', b === btn));
         closeDrawer();
-        openApp(app, id);
+        const app = state.apps[id];
+        if (app && app.url && app.url !== '/') { enterEmbed(id); } else { exitEmbed(); }
       });
     });
   }
@@ -89,10 +114,11 @@
       }).join('')}</div>
     </div>`;
     list.querySelectorAll('.queue-item').forEach((btn) => btn.addEventListener('click', () => {
-      const app = state.apps[btn.dataset.id];
-      selectDetail(btn.dataset.id);
+      const id = btn.dataset.id;
+      const app = state.apps[id];
+      selectDetail(id);
       closeDrawer();
-      openApp(app, btn.dataset.id);
+      if (app && app.url && app.url !== '/') { enterEmbed(id); } else { exitEmbed(); }
     }));
   }
 
@@ -112,7 +138,13 @@
         <div class="pc-url">${app.url}</div>
       </a>`;
     }).join('');
-    grid.querySelectorAll('.project-card').forEach((card) => card.addEventListener('click', () => selectDetail(card.dataset.id)));
+    grid.querySelectorAll('.project-card').forEach((card) => card.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = card.dataset.id;
+      const app = state.apps[id];
+      selectDetail(id);
+      if (app && app.url && app.url !== '/') { enterEmbed(id); } else { exitEmbed(); }
+    }));
   }
 
   function selectDetail(id) {
@@ -220,9 +252,10 @@
   });
   $('openWorkbenchBtn').addEventListener('click', () => {
     const app = state.apps[state.selected];
-    if (app && app.url && app.url !== '/') { window.open(app.url, '_blank', 'noopener'); return; }
-    location.href = '/';
+    if (app && app.url && app.url !== '/') { enterEmbed(state.selected); return; }
+    exitEmbed();
   });
+  $('backBtn').addEventListener('click', exitEmbed);
   $('detailDocsBtn').addEventListener('click', showDocs);
 
   const shell = $('appShell');
