@@ -259,6 +259,24 @@ test('workspace items preserve descriptions and details when edited', async () =
   assert.equal((await getWorkspace(localEnv, 'editor')).shortcuts[0].url, 'https://reference.example.com/path');
 });
 
+test('integration preload preference is persisted and defaults to false', async () => {
+  const localEnv = memberEnv();
+  await createMember(localEnv, { name: 'preload-user', password: 'member-pass-123' });
+  const onDemand = await addIntegration(localEnv, 'preload-user', {
+    name: 'On demand',
+    url: 'https://on-demand.example.com',
+  }, 3);
+  const preloaded = await addIntegration(localEnv, 'preload-user', {
+    name: 'Preloaded',
+    url: 'https://preloaded.example.com',
+    preload: true,
+  }, 3);
+  assert.equal(onDemand.preload, false);
+  assert.equal(preloaded.preload, true);
+  const disabled = await updateWorkspaceItem(localEnv, 'preload-user', 'integration', preloaded.id, { preload: false });
+  assert.equal(disabled.preload, false);
+});
+
 test('deleting a member also deletes their workspace', async () => {
   const localEnv = memberEnv();
   await createMember(localEnv, { name: 'cleanup-user', password: 'member-pass-123' });

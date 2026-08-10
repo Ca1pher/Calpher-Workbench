@@ -287,6 +287,7 @@ export async function addIntegration(env, owner, input, limit) {
   const item = {
     id: `integration-${crypto.randomUUID()}`,
     kind: 'integration',
+    preload: Boolean(input.preload),
     name: String(input.name || '').trim().slice(0, 40) || new URL(url).hostname,
     url,
     icon: String(input.icon || 'link').slice(0, 20),
@@ -354,6 +355,7 @@ export async function updateWorkspaceItem(env, owner, kind, id, input) {
     if (secret.length < 24 || secret.length > 200) throw new Error('接入密钥长度需为 24 至 200 位');
     item.secret = secret;
   }
+  if (kind === 'integration' && input.preload !== undefined) item.preload = Boolean(input.preload);
   item.updatedAt = new Date().toISOString();
   await putWorkspace(env, owner, workspace);
   return item;

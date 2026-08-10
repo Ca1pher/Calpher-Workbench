@@ -32,6 +32,7 @@ export async function platformIntegrations(env, registry, role, options = {}) {
       ...(app || {}),
       id: `global-${id}`,
       kind: 'integration',
+      preload: Boolean(app && app.preload),
       source: 'global',
       readonly: false,
       secret: stored.secret,

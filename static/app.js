@@ -9,6 +9,9 @@
     view: { mode: 'local' },
     loadingTimers: [],
     detailsOverrides: {},
+    activeFrame: null,
+    preloadFrames: new Map(),
+    preloadRun: 0,
   };
   const $ = (id) => document.getElementById(id);
   const isMobile = () => window.matchMedia('(max-width: 1180px)').matches;
@@ -84,6 +87,44 @@
     return handoff.url;
   }
 
+  function frameHost() {
+    return $('embedFrame').parentElement;
+  }
+
+  function makeEmbedFrame(id) {
+    const frame = document.createElement('iframe');
+    frame.className = 'embed-iframe';
+    frame.title = state.apps[id]?.name || '子项目';
+    frame.dataset.appId = id;
+    frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox');
+    return frame;
+  }
+
+  function moveFrameToPool(frame) {
+    if (frame) $('embedPreloadPool').appendChild(frame);
+  }
+
+  function frameForApp(id) {
+    const app = state.apps[id];
+    if (app && app.preload) {
+      let entry = state.preloadFrames.get(id);
+      if (!entry) {
+        entry = { frame: makeEmbedFrame(id), status: 'idle' };
+        state.preloadFrames.set(id, entry);
+      }
+      $('embedPreloadPool').appendChild(entry.frame);
+      return entry.frame;
+    }
+    return $('embedFrame');
+  }
+
+  function activateFrame(frame) {
+    const current = state.activeFrame || $('embedFrame');
+    if (current !== frame) moveFrameToPool(current);
+    frameHost().appendChild(frame);
+    state.activeFrame = frame;
+  }
+
   function refreshEmbedLaunchUrl() {
     const current = state.view;
     if (!current || current.mode !== 'embed') return;
@@ -94,17 +135,20 @@
       : handoffUrl(app, { fromWorkbench: true });
   }
 
-  function sendEmbedTheme() {
-    const current = state.view;
-    if (!current || current.mode !== 'embed' || !$('embedFrame').contentWindow) return;
-    const app = state.apps[current.id];
-    if (!app || !app.url) return;
-    $('embedFrame').contentWindow.postMessage({
+  function sendThemeToFrame(frame, target) {
+    if (!frame?.contentWindow || !target?.url) return;
+    frame.contentWindow.postMessage({
       source: 'kypher-embed',
       type: 'theme',
       theme: resolvedTheme(),
       accent: resolvedAccent(),
-    }, new URL(app.url, location.origin).origin);
+    }, new URL(target.url, location.origin).origin);
+  }
+
+  function sendEmbedTheme() {
+    const current = state.view;
+    if (current?.mode === 'embed') sendThemeToFrame(state.activeFrame || $('embedFrame'), state.apps[current.id]);
+    state.preloadFrames.forEach((entry, id) => sendThemeToFrame(entry.frame, state.apps[id]));
   }
 
   function clearLoadingTimers() {
@@ -165,13 +209,18 @@
     refreshEmbedLaunchUrl();
     $('embedTitle').textContent = app.name;
     $('pageTitleMain').textContent = app.name;
-    const frame = $('embedFrame');
-    frame.removeAttribute('src');
+    const frame = frameForApp(id);
+    activateFrame(frame);
+    if (!app.preload) frame.removeAttribute('src');
     showTransition(app);
-    requestAnimationFrame(async () => {
+    const preload = app.preload && state.preloadFrames.get(id);
+    if (preload && preload.status === 'ready') hideTransition();
+    else if (!frame.src) requestAnimationFrame(async () => {
       try {
+        if (preload) preload.status = 'loading';
         frame.src = await embedUrl(app);
       } catch (e) {
+        if (preload) preload.status = 'error';
         hideTransition();
         Cn.toast(e.message || '子项目鉴权初始化失败');
       }
@@ -188,7 +237,7 @@
   function exitEmbed() {
     state.view = { mode: 'local' };
     hideTransition();
-    $('embedFrame').removeAttribute('src');
+    moveFrameToPool(state.activeFrame || $('embedFrame'));
     $('embedTitle').textContent = '加载中…';
     const mutate = () => {
       $('appShell').classList.remove('embed-view', 'details-available');
@@ -199,8 +248,7 @@
     else mutate();
   }
 
-  const embedFrameEl = $('embedFrame');
-  embedFrameEl.addEventListener('load', () => {
+  $('embedFrame').addEventListener('load', () => {
     sendEmbedTheme();
     const current = state.view;
     const app = current && state.apps[current.id];
@@ -217,23 +265,69 @@
   });
 
   window.addEventListener('message', (event) => {
-    const current = state.view;
-    if (!current || current.mode !== 'embed') return;
-    const app = state.apps[current.id];
-    if (!app || event.source !== embedFrameEl.contentWindow) return;
+    const entry = [...state.preloadFrames.values()].find((item) => item.frame.contentWindow === event.source);
+    const frame = entry ? entry.frame : $('embedFrame').contentWindow === event.source ? $('embedFrame') : null;
+    if (!frame) return;
+    const id = frame.dataset.appId || (state.view.mode === 'embed' ? state.view.id : '');
+    const app = state.apps[id];
+    if (!app?.url) return;
     if (event.origin !== new URL(app.url, location.origin).origin) return;
     const data = event.data;
     if (!data || data.source !== 'kypher-embed') return;
     if (data.type === 'ready') {
-      sendEmbedTheme();
-      hideTransition();
-    } else if (data.type === 'title' && data.title) {
+      if (entry) entry.status = 'ready';
+      sendThemeToFrame(frame, app);
+      if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === frame) hideTransition();
+    } else if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === frame && data.type === 'title' && data.title) {
       $('pageTitleMain').textContent = data.title;
       $('embedTitle').textContent = data.title;
-    } else if (data.type === 'exit') {
+    } else if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === frame && data.type === 'exit') {
       exitEmbed();
     }
   });
+
+  function schedulePreloads() {
+    state.preloadRun += 1;
+    const run = state.preloadRun;
+    state.preloadFrames.forEach((entry, id) => {
+      if (!state.apps[id]?.preload && state.activeFrame !== entry.frame) {
+        entry.frame.remove();
+        state.preloadFrames.delete(id);
+      }
+    });
+    const candidates = Object.entries(state.apps)
+      .filter(([, app]) => app.kind === 'integration' && app.preload)
+      .slice(0, 3);
+    if (isMobile() || document.visibilityState !== 'visible'
+      || navigator.connection?.saveData
+      || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const loadNext = async (index) => {
+      if (run !== state.preloadRun || index >= candidates.length) return;
+      const [id, app] = candidates[index];
+      let entry = state.preloadFrames.get(id);
+      if (!entry) {
+        entry = { frame: makeEmbedFrame(id), status: 'idle' };
+        state.preloadFrames.set(id, entry);
+      }
+      if (entry.status === 'idle' || entry.status === 'error') {
+        entry.status = 'loading';
+        $('embedPreloadPool').appendChild(entry.frame);
+        try {
+          entry.frame.src = await embedUrl(app);
+        } catch (e) {
+          entry.status = 'error';
+        }
+      }
+      const next = () => loadNext(index + 1);
+      if (window.requestIdleCallback) requestIdleCallback(next, { timeout: 1800 });
+      else setTimeout(next, 180);
+    };
+
+    const start = () => loadNext(0);
+    if (window.requestIdleCallback) requestIdleCallback(start, { timeout: 1200 });
+    else setTimeout(start, 160);
+  }
 
   async function loadWorkspace(asUser = state.asUser) {
     const query = asUser ? `?as=${encodeURIComponent(asUser)}` : '';
@@ -246,6 +340,7 @@
     if (state.view.mode === 'embed' && !state.apps[state.view.id]) exitEmbed();
     if (!state.apps[state.selected]) state.selected = 'workbench';
     renderAll();
+    schedulePreloads();
   }
 
   function renderAll() {
@@ -512,13 +607,16 @@
       <label><span>子站地址</span><input id="quickAddUrl" type="url" placeholder="https://child.example.com" required></label>
       <label><span>简介</span><input id="quickAddDescription" maxlength="160"></label>
       <label><span>详情</span><textarea id="quickAddDetails" maxlength="2000" rows="4" placeholder="可选，将显示在子站详情区域"></textarea></label>
+      <label id="quickAddPreloadField"><span>加载策略</span><span class="toggle-field"><input id="quickAddPreload" type="checkbox"><b>提前加载子站</b></span></label>
       <div><span class="field-label">子站图标</span>${iconPicker('quickAddIcon')}</div>
       <button class="manage-primary" type="submit">添加到工作台</button>
     </form>`;
     Cn.openModal({ title: '添加子站', body, className: 'cn-modal-add', buttons: [] });
+    $('quickAddPreloadField').hidden = defaultKind !== 'integration';
     document.querySelectorAll('[data-add-mode]').forEach((button) => button.addEventListener('click', () => {
       document.querySelectorAll('[data-add-mode]').forEach((item) => item.classList.toggle('active', item === button));
       $('quickAddKind').value = button.dataset.addMode;
+      $('quickAddPreloadField').hidden = button.dataset.addMode !== 'integration';
     }));
     $('quickAddForm').addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -534,6 +632,7 @@
             description: formValue('quickAddDescription'),
             details: formValue('quickAddDetails'),
             icon: selectedIcon('quickAddIcon'),
+            preload: $('quickAddPreload')?.checked || false,
           }),
         });
         Cn.closeModal();
@@ -560,6 +659,7 @@
       <label><span>网站地址</span><input id="editSiteUrl" type="url" value="${esc(item.url)}" required></label>
       <label><span>网站简介</span><input id="editSiteDescription" maxlength="160" value="${esc(item.description || '')}"></label>
       <label><span>详情</span><textarea id="editSiteDetails" maxlength="2000" rows="5" placeholder="可选，将显示在子站详情区域">${esc(item.details || '')}</textarea></label>
+      ${isIntegration ? `<label><span>加载策略</span><span class="toggle-field"><input id="editSitePreload" type="checkbox" ${item.preload ? 'checked' : ''}><b>提前加载子站</b></span></label>` : ''}
       ${isIntegration ? '<label><span>替换密钥</span><input id="editSiteSecret" placeholder="留空保留当前密钥"></label>' : ''}
       <div><span class="field-label">图标</span>${iconPicker('editSiteIcon', item.icon || (isIntegration ? 'grid' : 'link'))}</div>
       <button class="manage-primary" type="submit">保存修改</button>
@@ -581,6 +681,7 @@
         icon: selectedIcon('editSiteIcon'),
       };
       if (isIntegration) payload.secret = formValue('editSiteSecret');
+      if (isIntegration) payload.preload = $('editSitePreload').checked;
       try {
         await fetchJSON(`/${isIntegration ? 'api/integrations' : 'api/shortcuts'}/${encodeURIComponent(item.id)}`, {
           method: 'PATCH',
@@ -647,6 +748,7 @@
           <input id="integrationSecret" placeholder="留空自动生成密钥">
           <input id="integrationDescription" maxlength="160" placeholder="网站简介">
           <textarea id="integrationDetails" maxlength="2000" rows="3" placeholder="详情（可选）"></textarea>
+          <label class="manage-wide"><span>加载策略</span><span class="toggle-field"><input id="integrationPreload" type="checkbox"><b>提前加载子站</b></span></label>
           ${iconPicker('integrationIcon')}
           <button class="manage-primary" type="submit">新增接入</button>
         </form>
@@ -739,6 +841,7 @@
             description: formValue('integrationDescription'),
             details: formValue('integrationDetails'),
             icon: selectedIcon('integrationIcon'),
+            preload: $('integrationPreload').checked,
           }),
         });
         await loadWorkspace();
