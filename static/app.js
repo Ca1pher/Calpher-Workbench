@@ -88,7 +88,7 @@
   }
 
   function frameHost() {
-    return $('embedFrame').parentElement;
+    return $('embedLoading').parentElement;
   }
 
   function makeEmbedFrame(id) {
