@@ -712,7 +712,7 @@
     const accents = [['emerald', '翡翠'], ['ocean', '静海'], ['iris', '鸢尾'], ['amber', '琥珀'], ['sakura', '绯樱']];
     const platformRows = (integrations.platformItems || []).map((item) => `<div class="manage-row">
       <div><strong>${esc(item.name)}</strong><small>${esc(item.url)}</small><code>${esc(item.secret)}</code></div>
-      <div class="manage-actions"><span class="manage-badge">平台</span><button data-copy="${esc(item.secret)}">复制</button><button data-delete-integration="${esc(item.id)}">删除</button></div>
+      <div class="manage-actions"><label class="preload-switch" title="进入工作台后提前加载该子站"><input type="checkbox" data-platform-preload="${esc(item.id)}" ${item.preload ? 'checked' : ''}><span>预加载</span></label><span class="manage-badge">平台</span><button data-copy="${esc(item.secret)}">复制</button><button data-delete-integration="${esc(item.id)}">删除</button></div>
     </div>`).join('');
     const integrationRows = integrations.items.map((item) => `<div class="manage-row">
       <div><strong>${esc(item.name)}</strong><small>${esc(item.url)}</small><code>${esc(item.secret)}</code></div>
@@ -825,6 +825,23 @@
         Cn.toast('密钥已复制');
       } catch (e) {
         Cn.toast('复制失败，请手动选中密钥');
+      }
+    }));
+    document.querySelectorAll('[data-platform-preload]').forEach((input) => input.addEventListener('change', async () => {
+      input.disabled = true;
+      try {
+        await fetchJSON(`/api/integrations/${encodeURIComponent(input.dataset.platformPreload)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ preload: input.checked }),
+        });
+        await loadWorkspace();
+        Cn.toast(input.checked ? '已启用子站预加载' : '已改为按需加载');
+      } catch (e) {
+        input.checked = !input.checked;
+        Cn.toast(e.message);
+      } finally {
+        input.disabled = false;
       }
     }));
     if ($('integrationForm')) $('integrationForm').addEventListener('submit', async (event) => {

@@ -17,7 +17,9 @@ import {
   getMemberPassword, listMembers, publicMember, removeWorkspaceItem, updateMember,
   updateOwnMember, updateWorkspaceItem, verifyMemberLogin,
 } from './data/store.js';
-import { platformIntegrations, removePlatformIntegration } from './data/registry.js';
+import {
+  platformIntegrations, removePlatformIntegration, updatePlatformIntegration,
+} from './data/registry.js';
 
 function json(data, status = 200, headers = {}) {
   return new Response(JSON.stringify(data), {
@@ -364,7 +366,14 @@ export default {
       const context = await effectiveContext(request, env, body.as || url.searchParams.get('as') || '');
       if (!context) return json({ error: '未登录或无权操作' }, 401);
       const id = decodeURIComponent(url.pathname.slice(18));
-      if (id.startsWith('global-')) return json({ error: '平台子站信息由项目注册表维护' }, 400);
+      if (id.startsWith('global-')) {
+        if (context.actor.role !== 'admin' || context.viewing) {
+          return json({ error: '仅管理员可修改自己的平台子站接入' }, 403);
+        }
+        try {
+          return json(await updatePlatformIntegration(env, id, { preload: body.preload }));
+        } catch (e) { return apiError(e); }
+      }
       try {
         return json(await updateWorkspaceItem(env, context.user.name, 'integration', id, body));
       } catch (e) { return apiError(e); }

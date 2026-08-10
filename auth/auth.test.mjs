@@ -22,7 +22,9 @@ import {
   updateWorkspaceItem,
   verifyMemberLogin,
 } from '../data/store.js';
-import { platformIntegrations, removePlatformIntegration } from '../data/registry.js';
+import {
+  platformIntegrations, removePlatformIntegration, updatePlatformIntegration,
+} from '../data/registry.js';
 
 const env = { AUTH_COOKIE_SECRET: 'test-secret-at-least-not-empty' };
 const now = Date.UTC(2026, 7, 8, 12, 0, 0);
@@ -335,6 +337,9 @@ test('platform integrations are admin-only, isolated, visible, and deletable', a
   assert.equal(items[0].readonly, false);
   assert.ok(items[0].secret.length >= 24);
   assert.notEqual(items[0].secret, items[1].secret);
+  assert.equal(items[0].preload, false);
+  await updatePlatformIntegration(localEnv, 'global-socks', { preload: true });
+  assert.equal((await platformIntegrations(localEnv, registry, 'admin'))[0].preload, true);
   await removePlatformIntegration(localEnv, 'global-socks');
   assert.deepEqual((await platformIntegrations(localEnv, registry, 'admin')).map((item) => item.id), ['global-sub']);
 });

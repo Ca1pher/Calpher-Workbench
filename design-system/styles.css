@@ -372,6 +372,9 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .manage-row code { color: var(--accent-300); }
 .manage-badge { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 9px; }
 .manage-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.preload-switch { min-height: 30px; display: inline-flex; align-items: center; gap: 6px; padding: 0 8px; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); font-size: 10px; cursor: pointer; }
+.preload-switch input { width: 14px; height: 14px; margin: 0; accent-color: var(--accent-500); }
+.preload-switch:has(input:checked) { color: var(--accent-300); border-color: rgb(var(--accent-rgb) / .3); background: rgb(var(--accent-rgb) / .08); }
 .manage-actions button { height: 30px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; background: rgba(255,255,255,.035); color: var(--muted); cursor: pointer; font-size: 10px; }
 .manage-actions button:hover { color: var(--text); border-color: rgb(var(--accent-rgb) / .3); }
 .manage-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }

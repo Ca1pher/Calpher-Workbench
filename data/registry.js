@@ -32,7 +32,7 @@ export async function platformIntegrations(env, registry, role, options = {}) {
       ...(app || {}),
       id: `global-${id}`,
       kind: 'integration',
-      preload: Boolean(app && app.preload),
+      preload: typeof stored.preload === 'boolean' ? stored.preload : Boolean(app && app.preload),
       source: 'global',
       readonly: false,
       secret: stored.secret,
@@ -50,4 +50,15 @@ export async function removePlatformIntegration(env, id) {
   stored.deleted = true;
   stored.updatedAt = new Date().toISOString();
   await requireKv(env).put(key, JSON.stringify(stored));
+}
+
+export async function updatePlatformIntegration(env, id, input) {
+  const registryId = String(id || '').replace(/^global-/, '');
+  const key = platformKey(registryId);
+  const stored = await requireKv(env).get(key, 'json');
+  if (!stored || stored.deleted) throw new Error('平台子站不存在');
+  if (input.preload !== undefined) stored.preload = Boolean(input.preload);
+  stored.updatedAt = new Date().toISOString();
+  await requireKv(env).put(key, JSON.stringify(stored));
+  return { id: `global-${registryId}`, preload: Boolean(stored.preload) };
 }
