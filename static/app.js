@@ -270,10 +270,17 @@
       ${id === 'workbench' ? '<span class="live-dot"></span>' : `<svg><use href="#${appIcon(app)}"/></svg>`}
       <span>${esc(app.name)}</span>
     </button>`;
-    $('primaryNav').innerHTML = integrations.map(makeButton).join('')
-      + (shortcuts.length ? `<div class="nav-section-label">网站导航</div>${shortcuts.map(makeButton).join('')}` : '');
+    const shortcutSelected = state.selected === 'shortcuts'
+      || Boolean(state.apps[state.selected] && state.apps[state.selected].kind === 'shortcut');
+    const shortcutArea = shortcuts.length ? `<div class="nav-section-label">个人入口</div>
+      <button class="nav-item shortcut-area-item${shortcutSelected ? ' active' : ''}" data-id="shortcuts" title="网站导航（${shortcuts.length}）">
+        <svg><use href="#i-folder"/></svg><span>网站导航 <small>${shortcuts.length}</small></span>
+      </button>` : '';
+    $('primaryNav').innerHTML = integrations.map(makeButton).join('') + shortcutArea;
     $('primaryNav').querySelectorAll('.nav-item').forEach((button) => {
-      button.addEventListener('click', () => openItem(button.dataset.id));
+      button.addEventListener('click', () => button.dataset.id === 'shortcuts'
+        ? selectShortcutArea()
+        : openItem(button.dataset.id));
     });
     if (window.CalpherMotion) window.CalpherMotion.navRendered($('primaryNav'));
   }
@@ -305,12 +312,18 @@
     const entries = Object.entries(state.apps);
     const integrations = entries.filter(([, app]) => app.kind === 'integration');
     const shortcuts = entries.filter(([, app]) => app.kind === 'shortcut');
-    const group = (label, items, color) => items.length ? `<div class="queue-group open" style="--group-color:${color}">
+    const group = (label, items, color, open = true) => items.length ? `<div class="queue-group${open ? ' open' : ''}" style="--group-color:${color}">
       <button class="group-head"><span><i></i><b>${label}（${items.length}）</b></span><svg><use href="#i-chevron"/></svg></button>
       <div class="group-items">${items.map(itemRow).join('')}</div>
     </div>` : '';
-    $('projectList').innerHTML = group('接入子站', integrations, 'var(--green)')
-      + group('网站导航', shortcuts, '#e2a13a');
+    const shortcutGroup = shortcuts.length ? `<div class="queue-group shortcut-queue-group" style="--group-color:#e2a13a">
+      <button class="group-head" data-shortcut-area>
+        <span><i></i><b>网站导航（${shortcuts.length}）</b></span>
+        <svg><use href="#i-folder"/></svg>
+      </button>
+    </div>` : '';
+    $('projectList').innerHTML = group('接入子站', integrations, 'var(--green)') + shortcutGroup;
+    $('projectList').querySelector('[data-shortcut-area]')?.addEventListener('click', selectShortcutArea);
     $('projectList').querySelectorAll('.queue-item').forEach((button) => {
       button.addEventListener('click', () => openItem(button.dataset.id));
     });
@@ -321,24 +334,67 @@
     const query = filter.trim().toLowerCase();
     const entries = Object.entries(state.apps).filter(([, app]) =>
       !query || `${app.name} ${app.description || ''}`.toLowerCase().includes(query));
-    $('projectCount').textContent = `${entries.length} 个`;
+    const integrations = entries.filter(([, app]) => app.kind !== 'shortcut');
+    const shortcuts = entries.filter(([, app]) => app.kind === 'shortcut');
+    $('projectCount').textContent = `${integrations.length} 个子站${shortcuts.length ? ` · 网站导航 ${shortcuts.length}` : ''}`;
     if (!entries.length) {
       $('projectGrid').innerHTML = '<p class="project-empty">没有匹配的子站</p>';
       if (window.CalpherMotion) window.CalpherMotion.projectsRendered($('projectGrid'));
       return;
     }
-    $('projectGrid').innerHTML = entries.map(([id, app]) => `<a class="project-card" href="${esc(app.url)}" data-id="${esc(id)}">
+    const integrationCards = integrations.map(([id, app]) => `<a class="project-card" href="${esc(app.url)}" data-id="${esc(id)}">
       <div><div class="pc-head"><span class="pc-icon"><svg><use href="#${appIcon(app)}"/></svg></span><h4>${esc(app.name)}</h4></div>
       <p>${esc(app.description || (app.kind === 'shortcut' ? '个人网站导航' : '统一鉴权子项目'))}</p></div>
       <div class="pc-url">${esc(app.url)}</div>
     </a>`).join('');
+    const shortcutShelf = shortcuts.length ? `<section class="shortcut-shelf" aria-label="网站导航">
+      <div class="shortcut-shelf-head">
+        <div class="pc-head"><span class="pc-icon"><svg><use href="#i-folder"/></svg></span><div><h4>网站导航</h4><small>个人收藏夹 · ${shortcuts.length} 个入口</small></div></div>
+        <span class="shortcut-shelf-mark">收藏</span>
+      </div>
+      <div class="shortcut-shelf-links">${shortcuts.map(([id, app]) => `<button class="shortcut-link" data-id="${esc(id)}" title="${esc(app.url)}">
+        <span class="shortcut-link-icon"><svg><use href="#${appIcon(app)}"/></svg></span>
+        <span><b>${esc(app.name)}</b><small>${esc(app.description || new URL(app.url, location.origin).hostname)}</small></span>
+        <svg class="shortcut-link-arrow"><use href="#i-chevron"/></svg>
+      </button>`).join('')}</div>
+    </section>` : '';
+    $('projectGrid').innerHTML = integrationCards + shortcutShelf;
     $('projectGrid').querySelectorAll('.project-card').forEach((card) => {
       card.addEventListener('click', (event) => {
         event.preventDefault();
         openItem(card.dataset.id);
       });
     });
+    $('projectGrid').querySelectorAll('.shortcut-link').forEach((button) => {
+      button.addEventListener('click', () => openItem(button.dataset.id));
+    });
     if (window.CalpherMotion) window.CalpherMotion.projectsRendered($('projectGrid'));
+  }
+
+  function selectShortcutArea() {
+    state.selected = 'shortcuts';
+    state.view = { mode: 'local' };
+    hideTransition();
+    $('embedFrame').removeAttribute('src');
+    $('embedTitle').textContent = '网站导航';
+    $('pageTitleMain').textContent = '网站导航';
+    document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.id === 'shortcuts'));
+    $('detailsHeadingTitle').textContent = '网站导航 详情';
+    $('detailTitle').textContent = '网站导航';
+    $('detailDescription').textContent = '当前工作台的个人收藏夹，仅作为网址入口使用。';
+    $('detailDomain').textContent = location.hostname.replace(/^www\./, '');
+    $('detailStatus').textContent = '收藏夹';
+    $('detailUser').textContent = state.workspaceUser ? `${displayName(state.workspaceUser)} · ${state.workspaceUser.role}` : '未登录';
+    $('detailMode').textContent = '个人导航';
+    $('detailTheme').textContent = resolvedTheme() === 'light' ? '亮色' : '暗色';
+    $('appShell').classList.remove('embed-view', 'details-available');
+    $('detailNote').hidden = false;
+    $('detailNoteTitle').textContent = '关于网站导航';
+    $('workbenchDetailList').hidden = true;
+    $('childDetailText').hidden = false;
+    $('childDetailText').textContent = '网站导航不会参与统一鉴权，只保留在当前账号的工作台中，网址可以在区域内逐个打开。';
+    $('detailDocsBtn').hidden = true;
+    if (window.CalpherMotion) window.CalpherMotion.detailChanged();
   }
 
   function selectDetail(id) {
@@ -858,9 +914,7 @@
     } catch (e) {}
   }
   $('sidebarCollapseBtn').addEventListener('click', () => {
-    const mutate = () => setSidebarCollapsed(!shell.classList.contains('sidebar-collapsed'));
-    if (window.CalpherMotion) window.CalpherMotion.layoutChange(mutate);
-    else mutate();
+    setSidebarCollapsed(!shell.classList.contains('sidebar-collapsed'));
     closeDrawer();
   });
   $('detailsCollapseBtn').addEventListener('click', () => {
