@@ -90,7 +90,10 @@ export function initHome(gsapApi, ScrollTriggerApi) {
     var next = current === 'dark' ? 'light' : 'dark';
     document.documentElement.dataset.theme = next;
     document.documentElement.dataset.themeResolved = next;
-    try { localStorage.setItem('calpher-workbench-theme', next); } catch (e) {}
+    try {
+      localStorage.setItem('calpher-workbench-theme', next);
+      localStorage.setItem('calpher-workbench-theme-manual', '1');
+    } catch (e) {}
   });
 
   fetch('/api/me').then(function (response) {

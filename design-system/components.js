@@ -1,33 +1,43 @@
 (function (global) {
   const THEME_KEY = 'calpher-workbench-theme';
+  const THEME_MANUAL_KEY = 'calpher-workbench-theme-manual';
   const ACCENT_KEY = 'calpher-workbench-accent';
   const ACCENTS = ['emerald', 'ocean', 'iris', 'amber', 'sakura'];
 
+  function deviceTheme() {
+    const hour = new Date().getHours();
+    return hour >= 7 && hour < 19 ? 'light' : 'dark';
+  }
+
   function resolveTheme(pref) {
-    if (pref === 'system') {
-      return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    }
+    if (pref === 'system') return deviceTheme();
     return pref;
   }
 
   function initTheme() {
-    let theme = 'dark';
-    try { theme = localStorage.getItem(THEME_KEY) || 'dark'; } catch (e) {}
+    let theme = deviceTheme();
+    try {
+      const saved = localStorage.getItem(THEME_KEY);
+      if (localStorage.getItem(THEME_MANUAL_KEY) === '1' && ['light', 'dark'].includes(saved)) theme = saved;
+    } catch (e) {}
     let accent = 'ocean';
     try { accent = localStorage.getItem(ACCENT_KEY) || 'ocean'; } catch (e) {}
-    if (!['light', 'dark', 'system'].includes(theme)) theme = 'dark';
     if (!ACCENTS.includes(accent)) accent = 'ocean';
     document.documentElement.dataset.theme = theme;
-    document.documentElement.dataset.themeResolved = resolveTheme(theme);
+    document.documentElement.dataset.themeResolved = theme;
     document.documentElement.dataset.accent = accent;
   }
 
   function setTheme(theme) {
     if (!['light', 'dark', 'system'].includes(theme)) return;
-    document.documentElement.dataset.theme = theme;
     const resolved = resolveTheme(theme);
+    document.documentElement.dataset.theme = resolved;
     document.documentElement.dataset.themeResolved = resolved;
-    try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+      if (theme === 'system') localStorage.removeItem(THEME_MANUAL_KEY);
+      else localStorage.setItem(THEME_MANUAL_KEY, '1');
+    } catch (e) {}
     global.dispatchEvent(new CustomEvent('calpher:themechange', {
       detail: { preference: theme, resolved },
     }));

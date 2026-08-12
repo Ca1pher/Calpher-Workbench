@@ -6,11 +6,20 @@
   <title>登录 · Calpher Workbench</title>
   <script>
     (() => {
-      try { var t = localStorage.getItem('calpher-workbench-theme') || 'dark'; } catch(e) { var t = 'dark'; }
+      var deviceTheme = () => {
+        var hour = new Date().getHours();
+        return hour >= 7 && hour < 19 ? 'light' : 'dark';
+      };
+      try {
+        var savedTheme = localStorage.getItem('calpher-workbench-theme');
+        var t = localStorage.getItem('calpher-workbench-theme-manual') === '1'
+          && ['light', 'dark'].includes(savedTheme)
+          ? savedTheme
+          : deviceTheme();
+      } catch(e) { var t = deviceTheme(); }
       try { var a = localStorage.getItem('calpher-workbench-accent') || 'ocean'; } catch(e) { var a = 'ocean'; }
-      var validT = ['light','dark','system'].includes(t) ? t : 'dark';
-      document.documentElement.dataset.theme = validT;
-      document.documentElement.dataset.themeResolved = validT === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : validT;
+      document.documentElement.dataset.theme = t;
+      document.documentElement.dataset.themeResolved = t;
       document.documentElement.dataset.accent = ['emerald','ocean','iris','amber','sakura'].includes(a) ? a : 'ocean';
     })();
   </script>

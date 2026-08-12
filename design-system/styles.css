@@ -231,8 +231,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .embed-open:hover { text-decoration: underline; }
 .embed-frame { position: relative; flex: 1; min-width: 0; min-height: 0; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); background: #080d0b; }
 .embed-iframe { width: 100%; min-width: 100%; height: 100%; border: 0; background: #080d0b; display: block; }
-.embed-preload-pool { position: fixed; width: 1px; height: 1px; left: -10000px; top: -10000px; overflow: hidden; opacity: 0; pointer-events: none; }
-.embed-preload-pool .embed-iframe { position: absolute; width: 1px; height: 1px; }
+.embed-preload-pool { position: fixed; width: min(1280px, 92vw); height: min(820px, 88vh); left: -200vw; top: 0; overflow: hidden; opacity: 0; pointer-events: none; contain: strict; }
+.embed-preload-pool .embed-iframe { position: absolute; inset: 0; width: 100%; min-width: 100%; height: 100%; }
 .embed-loading { position: absolute; inset: 0; display: grid; color: #dbe5e0; background: #070b09; z-index: 2; overflow: hidden; }
 .embed-loading::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0 24%, rgb(var(--accent-rgb) / .055) 24% 25%, transparent 25% 74%, rgba(255,255,255,.035) 74% 75%, transparent 75%); background-size: 48px 100%; opacity: .72; }
 .embed-loading::after { content: ""; position: absolute; inset: auto 0 0; height: 34%; border-top: 1px solid rgb(var(--accent-rgb) / .13); background: linear-gradient(180deg, rgb(var(--accent-rgb) / .035), transparent); }
@@ -911,10 +911,39 @@ html[data-theme="light"] .mode-switch button.active { color: var(--accent-ink); 
   font-size: 10px;
 }
 .workbench-body .workspace-grid {
-  grid-template-columns: 280px minmax(420px, 1fr);
+  grid-template-columns: minmax(0, 1.65fr) minmax(250px, .75fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 10px;
 }
+.workbench-body .app-shell.navigation-led-workspace .workspace-grid {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.workbench-body .app-shell.navigation-led-workspace .carousel-panel {
+  order: 2;
+  min-height: 150px;
+  max-height: 180px;
+}
+.workbench-body .app-shell.navigation-led-workspace .shortcut-grid {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+.workbench-body .app-shell.navigation-led-workspace .shortcut-panel {
+  order: 1;
+  min-height: 0;
+}
 .workbench-body .section-heading { height: 38px; align-items: center; }
+.workbench-body .project-heading > div:first-child { min-width: 0; }
+.workbench-body .section-subtitle {
+  margin: 3px 0 0;
+  color: #7f8b85;
+  font-size: 9px;
+}
+.workbench-body .section-heading-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
 .workbench-body .section-heading h2 {
   font-size: 16px;
   font-weight: 620;
@@ -971,6 +1000,32 @@ html[data-theme="light"] .mode-switch button.active { color: var(--accent-ink); 
   border-color: rgb(var(--accent-rgb) / .34);
   background: rgb(var(--accent-rgb) / .04);
   box-shadow: 0 12px 28px rgba(0,0,0,.24);
+}
+.workbench-body .shortcut-panel {
+  min-width: 0;
+  padding: 12px 14px 14px;
+  border-color: rgb(226 161 58 / .2);
+  background: linear-gradient(145deg, rgb(226 161 58 / .055), rgba(255,255,255,.012));
+}
+.workbench-body .shortcut-heading {
+  height: auto;
+  min-height: 38px;
+  align-items: flex-start;
+}
+.workbench-body .shortcut-heading > div { min-width: 0; }
+.workbench-body .shortcut-heading p {
+  margin: 3px 0 0;
+  color: #8d8170;
+  font-size: 9px;
+}
+.workbench-body .shortcut-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 6px;
+  margin-top: 9px;
+}
+.workbench-body .shortcut-panel .project-empty {
+  min-height: 150px;
 }
 .workbench-body .shortcut-shelf {
   position: relative;
@@ -1032,6 +1087,7 @@ html[data-theme="light"] .mode-switch button.active { color: var(--accent-ink); 
   background: rgba(0,0,0,.12);
   color: var(--text);
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   transition: border-color .2s ease, background-color .2s ease, transform .2s ease;
 }
@@ -1061,12 +1117,17 @@ html[data-theme="light"] .mode-switch button.active { color: var(--accent-ink); 
 }
 .workbench-body .shortcut-link b { color: #d9c5a4; font-size: 10px; }
 .workbench-body .shortcut-link small { margin-top: 2px; color: #8d8170; font-size: 8px; }
-.workbench-body .shortcut-link-arrow { width: 12px; height: 12px; color: #a7875b; transform: rotate(-90deg); }
+.workbench-body .shortcut-link-arrow { width: 12px; height: 12px; color: #a7875b; }
 html[data-theme="light"] .workbench-body .shortcut-shelf {
   border-color: rgb(170 109 24 / .25);
   background: linear-gradient(145deg, rgb(236 185 89 / .16), rgba(255,255,255,.8));
   box-shadow: inset 0 1px rgba(255,255,255,.9), 0 8px 20px rgba(105,77,26,.08);
 }
+html[data-theme="light"] .workbench-body .shortcut-panel {
+  border-color: rgb(170 109 24 / .2);
+  background: linear-gradient(145deg, rgb(236 185 89 / .11), rgba(255,255,255,.66));
+}
+html[data-theme="light"] .workbench-body .shortcut-heading p { color: #806f52; }
 html[data-theme="light"] .workbench-body .shortcut-shelf-head small { color: #8f7446; }
 html[data-theme="light"] .workbench-body .shortcut-link {
   border-color: rgb(120 91 46 / .13);
@@ -1277,9 +1338,9 @@ html[data-theme="light"] .workbench-body .cn-modal {
     width: 100%;
     min-width: 0;
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
     gap: 12px;
   }
-  .workbench-body .queue-pane { padding-top: 4px; }
   .workbench-body .carousel-panel {
     width: 100%;
     min-width: 0;
@@ -1318,6 +1379,7 @@ html[data-theme="light"] .workbench-body .cn-modal {
   }
   .workbench-body .metric-card p { line-height: 1.35; }
   .workbench-body .project-grid { grid-template-columns: 1fr 1fr; }
+  .workbench-body .shortcut-grid { grid-template-columns: 1fr 1fr; }
   .workbench-body .project-card { min-height: 120px; }
   .workbench-body .details-content { padding: 16px; }
   .workbench-body .cn-modal-overlay { padding: 6px; }
@@ -1326,7 +1388,8 @@ html[data-theme="light"] .workbench-body .cn-modal {
 
 @media (max-width: 380px) {
   .workbench-body .metric-grid,
-  .workbench-body .project-grid { grid-template-columns: 1fr; }
+  .workbench-body .project-grid,
+  .workbench-body .shortcut-grid { grid-template-columns: 1fr; }
   .workbench-body .metric-card { min-height: 106px; }
 }
 

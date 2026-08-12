@@ -125,6 +125,12 @@
     state.activeFrame = frame;
   }
 
+  function revealFrameAfterLayout(frame) {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (state.activeFrame === frame && frame.isConnected) hideTransition();
+    }));
+  }
+
   function refreshEmbedLaunchUrl() {
     const current = state.view;
     if (!current || current.mode !== 'embed') return;
@@ -178,8 +184,7 @@
   }
 
   function openShortcut(app) {
-    if (isMobile()) window.open(themedTarget(app, { fromWorkbench: true }).toString(), '_blank', 'noopener');
-    else enterEmbed(app.id);
+    window.open(themedTarget(app, { fromWorkbench: true }).toString(), '_blank', 'noopener');
   }
 
   function openItem(id) {
@@ -214,7 +219,7 @@
     if (!app.preload) frame.removeAttribute('src');
     showTransition(app);
     const preload = app.preload && state.preloadFrames.get(id);
-    if (preload && preload.status === 'ready') hideTransition();
+    if (preload && preload.status === 'ready') revealFrameAfterLayout(frame);
     else if (!frame.src) requestAnimationFrame(async () => {
       try {
         if (preload) preload.status = 'loading';
@@ -252,7 +257,8 @@
     sendEmbedTheme();
     const current = state.view;
     const app = current && state.apps[current.id];
-    if (app && app.kind === 'shortcut') hideTransition();
+    if (app && app.kind === 'shortcut') revealFrameAfterLayout($('embedFrame'));
+    else if (app && state.activeFrame === $('embedFrame')) revealFrameAfterLayout($('embedFrame'));
   });
   $('embedOpen').addEventListener('click', (event) => {
     const current = state.view;
@@ -277,7 +283,7 @@
     if (data.type === 'ready') {
       if (entry) entry.status = 'ready';
       sendThemeToFrame(frame, app);
-      if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === frame) hideTransition();
+      if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === frame) revealFrameAfterLayout(frame);
     } else if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === frame && data.type === 'title' && data.title) {
       $('pageTitleMain').textContent = data.title;
       $('embedTitle').textContent = data.title;
@@ -313,6 +319,12 @@
       if (entry.status === 'idle' || entry.status === 'error') {
         entry.status = 'loading';
         $('embedPreloadPool').appendChild(entry.frame);
+        entry.frame.addEventListener('load', () => {
+          if (entry.status === 'loading') entry.status = 'loaded';
+          if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === entry.frame) {
+            revealFrameAfterLayout(entry.frame);
+          }
+        }, { once: true });
         try {
           entry.frame.src = await embedUrl(app);
         } catch (e) {
@@ -338,6 +350,9 @@
     state.limits = data.limits || {};
     state.asUser = data.viewing ? data.workspaceUser.name : '';
     if (state.view.mode === 'embed' && !state.apps[state.view.id]) exitEmbed();
+    if (state.apps[state.selected]?.kind === 'shortcut' || state.selected === 'shortcuts') {
+      state.selected = 'workbench';
+    }
     if (!state.apps[state.selected]) state.selected = 'workbench';
     renderAll();
     schedulePreloads();
@@ -346,7 +361,6 @@
   function renderAll() {
     renderNav();
     renderMetrics();
-    renderProjectList();
     renderProjectGrid($('searchInput').value);
     renderUser();
     selectDetail(state.selected);
@@ -360,22 +374,13 @@
   function renderNav() {
     const entries = Object.entries(state.apps);
     const integrations = entries.filter(([, app]) => app.kind !== 'shortcut');
-    const shortcuts = entries.filter(([, app]) => app.kind === 'shortcut');
     const makeButton = ([id, app]) => `<button class="nav-item${id === state.selected ? ' active' : ''}" data-id="${esc(id)}" title="${esc(app.name)}">
       ${id === 'workbench' ? '<span class="live-dot"></span>' : `<svg><use href="#${appIcon(app)}"/></svg>`}
       <span>${esc(app.name)}</span>
     </button>`;
-    const shortcutSelected = state.selected === 'shortcuts'
-      || Boolean(state.apps[state.selected] && state.apps[state.selected].kind === 'shortcut');
-    const shortcutArea = shortcuts.length ? `<div class="nav-section-label">个人入口</div>
-      <button class="nav-item shortcut-area-item${shortcutSelected ? ' active' : ''}" data-id="shortcuts" title="网站导航（${shortcuts.length}）">
-        <svg><use href="#i-folder"/></svg><span>网站导航 <small>${shortcuts.length}</small></span>
-      </button>` : '';
-    $('primaryNav').innerHTML = integrations.map(makeButton).join('') + shortcutArea;
+    $('primaryNav').innerHTML = integrations.map(makeButton).join('');
     $('primaryNav').querySelectorAll('.nav-item').forEach((button) => {
-      button.addEventListener('click', () => button.dataset.id === 'shortcuts'
-        ? selectShortcutArea()
-        : openItem(button.dataset.id));
+      button.addEventListener('click', () => openItem(button.dataset.id));
     });
     if (window.CalpherMotion) window.CalpherMotion.navRendered($('primaryNav'));
   }
@@ -403,93 +408,37 @@
     </button>`;
   }
 
-  function renderProjectList() {
-    const entries = Object.entries(state.apps);
-    const integrations = entries.filter(([, app]) => app.kind === 'integration');
-    const shortcuts = entries.filter(([, app]) => app.kind === 'shortcut');
-    const group = (label, items, color, open = true) => items.length ? `<div class="queue-group${open ? ' open' : ''}" style="--group-color:${color}">
-      <button class="group-head"><span><i></i><b>${label}（${items.length}）</b></span><svg><use href="#i-chevron"/></svg></button>
-      <div class="group-items">${items.map(itemRow).join('')}</div>
-    </div>` : '';
-    const shortcutGroup = shortcuts.length ? `<div class="queue-group shortcut-queue-group" style="--group-color:#e2a13a">
-      <button class="group-head" data-shortcut-area>
-        <span><i></i><b>网站导航（${shortcuts.length}）</b></span>
-        <svg><use href="#i-folder"/></svg>
-      </button>
-    </div>` : '';
-    $('projectList').innerHTML = group('接入子站', integrations, 'var(--green)') + shortcutGroup;
-    $('projectList').querySelector('[data-shortcut-area]')?.addEventListener('click', selectShortcutArea);
-    $('projectList').querySelectorAll('.queue-item').forEach((button) => {
-      button.addEventListener('click', () => openItem(button.dataset.id));
-    });
-    if (window.CalpherMotion) window.CalpherMotion.queueRendered($('projectList'));
-  }
-
   function renderProjectGrid(filter = '') {
     const query = filter.trim().toLowerCase();
-    const entries = Object.entries(state.apps).filter(([, app]) =>
+    const matches = Object.entries(state.apps).filter(([, app]) =>
       !query || `${app.name} ${app.description || ''}`.toLowerCase().includes(query));
-    const integrations = entries.filter(([, app]) => app.kind !== 'shortcut');
-    const shortcuts = entries.filter(([, app]) => app.kind === 'shortcut');
-    $('projectCount').textContent = `${integrations.length} 个子站${shortcuts.length ? ` · 网站导航 ${shortcuts.length}` : ''}`;
-    if (!entries.length) {
-      $('projectGrid').innerHTML = '<p class="project-empty">没有匹配的子站</p>';
-      if (window.CalpherMotion) window.CalpherMotion.projectsRendered($('projectGrid'));
-      return;
-    }
+    const integrations = matches.filter(([, app]) => app.kind === 'integration');
+    const shortcuts = matches.filter(([, app]) => app.kind === 'shortcut');
+    const totalIntegrations = Object.values(state.apps).filter((app) => app.kind === 'integration').length;
+    const totalShortcuts = Object.values(state.apps).filter((app) => app.kind === 'shortcut').length;
+    $('projectCount').textContent = query ? `${integrations.length} / ${totalIntegrations}` : `${integrations.length} 个子站`;
+    $('shortcutCount').textContent = query ? `${shortcuts.length} / ${totalShortcuts}` : `${shortcuts.length} 个入口`;
+    $('appShell').classList.toggle('navigation-led-workspace', totalIntegrations === 0 && totalShortcuts > 0);
     const integrationCards = integrations.map(([id, app]) => `<a class="project-card" href="${esc(app.url)}" data-id="${esc(id)}">
       <div><div class="pc-head"><span class="pc-icon"><svg><use href="#${appIcon(app)}"/></svg></span><h4>${esc(app.name)}</h4></div>
-      <p>${esc(app.description || (app.kind === 'shortcut' ? '个人网站导航' : '统一鉴权子项目'))}</p></div>
+      <p>${esc(app.description || '统一鉴权子项目')}</p></div>
       <div class="pc-url">${esc(app.url)}</div>
     </a>`).join('');
-    const shortcutShelf = shortcuts.length ? `<section class="shortcut-shelf" aria-label="网站导航">
-      <div class="shortcut-shelf-head">
-        <div class="pc-head"><span class="pc-icon"><svg><use href="#i-folder"/></svg></span><div><h4>网站导航</h4><small>个人收藏夹 · ${shortcuts.length} 个入口</small></div></div>
-        <span class="shortcut-shelf-mark">收藏</span>
-      </div>
-      <div class="shortcut-shelf-links">${shortcuts.map(([id, app]) => `<button class="shortcut-link" data-id="${esc(id)}" title="${esc(app.url)}">
-        <span class="shortcut-link-icon"><svg><use href="#${appIcon(app)}"/></svg></span>
-        <span><b>${esc(app.name)}</b><small>${esc(app.description || new URL(app.url, location.origin).hostname)}</small></span>
-        <svg class="shortcut-link-arrow"><use href="#i-chevron"/></svg>
-      </button>`).join('')}</div>
-    </section>` : '';
-    $('projectGrid').innerHTML = integrationCards + shortcutShelf;
+    $('projectGrid').innerHTML = integrationCards
+      || `<p class="project-empty">${query ? '没有匹配的子站' : '还没有接入子站'}</p>`;
+    $('shortcutGrid').innerHTML = shortcuts.map(([id, app]) => `<a class="shortcut-link" href="${esc(themedTarget(app, { fromWorkbench: true }).toString())}" target="_blank" rel="noopener noreferrer" data-id="${esc(id)}" title="在新窗口打开 ${esc(app.name)}">
+      <span class="shortcut-link-icon"><svg><use href="#${appIcon(app)}"/></svg></span>
+      <span><b>${esc(app.name)}</b><small>${esc(app.description || new URL(app.url, location.origin).hostname)}</small></span>
+      <svg class="shortcut-link-arrow"><use href="#i-external"/></svg>
+    </a>`).join('') || `<p class="project-empty">${query ? '没有匹配的网站导航' : '还没有收藏网址'}</p>`;
     $('projectGrid').querySelectorAll('.project-card').forEach((card) => {
       card.addEventListener('click', (event) => {
         event.preventDefault();
         openItem(card.dataset.id);
       });
     });
-    $('projectGrid').querySelectorAll('.shortcut-link').forEach((button) => {
-      button.addEventListener('click', () => openItem(button.dataset.id));
-    });
     if (window.CalpherMotion) window.CalpherMotion.projectsRendered($('projectGrid'));
-  }
-
-  function selectShortcutArea() {
-    state.selected = 'shortcuts';
-    state.view = { mode: 'local' };
-    hideTransition();
-    $('embedFrame').removeAttribute('src');
-    $('embedTitle').textContent = '网站导航';
-    $('pageTitleMain').textContent = '网站导航';
-    document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.id === 'shortcuts'));
-    $('detailsHeadingTitle').textContent = '网站导航 详情';
-    $('detailTitle').textContent = '网站导航';
-    $('detailDescription').textContent = '当前工作台的个人收藏夹，仅作为网址入口使用。';
-    $('detailDomain').textContent = location.hostname.replace(/^www\./, '');
-    $('detailStatus').textContent = '收藏夹';
-    $('detailUser').textContent = state.workspaceUser ? `${displayName(state.workspaceUser)} · ${state.workspaceUser.role}` : '未登录';
-    $('detailMode').textContent = '个人导航';
-    $('detailTheme').textContent = resolvedTheme() === 'light' ? '亮色' : '暗色';
-    $('appShell').classList.remove('embed-view', 'details-available');
-    $('detailNote').hidden = false;
-    $('detailNoteTitle').textContent = '关于网站导航';
-    $('workbenchDetailList').hidden = true;
-    $('childDetailText').hidden = false;
-    $('childDetailText').textContent = '网站导航不会参与统一鉴权，只保留在当前账号的工作台中，网址可以在区域内逐个打开。';
-    $('detailDocsBtn').hidden = true;
-    if (window.CalpherMotion) window.CalpherMotion.detailChanged();
+    if (window.CalpherMotion) window.CalpherMotion.projectsRendered($('shortcutGrid'));
   }
 
   function selectDetail(id) {
@@ -597,27 +546,18 @@
   }
 
   function openAddSite(defaultKind = 'integration') {
+    const isIntegration = defaultKind === 'integration';
     const body = `<form id="quickAddForm" class="quick-add-form">
-      <div class="mode-switch">
-        <button type="button" data-add-mode="integration" class="${defaultKind === 'integration' ? 'active' : ''}">子站接入</button>
-        <button type="button" data-add-mode="shortcut" class="${defaultKind === 'shortcut' ? 'active' : ''}">网站导航</button>
-      </div>
       <input type="hidden" id="quickAddKind" value="${defaultKind}">
-      <label><span>侧边栏名称</span><input id="quickAddName" maxlength="40" required></label>
-      <label><span>子站地址</span><input id="quickAddUrl" type="url" placeholder="https://child.example.com" required></label>
+      <label><span>${isIntegration ? '侧边栏名称' : '导航名称'}</span><input id="quickAddName" maxlength="40" required></label>
+      <label><span>${isIntegration ? '子站地址' : '网站地址'}</span><input id="quickAddUrl" type="url" placeholder="${isIntegration ? 'https://child.example.com' : 'https://www.example.com'}" required></label>
       <label><span>简介</span><input id="quickAddDescription" maxlength="160"></label>
-      <label><span>详情</span><textarea id="quickAddDetails" maxlength="2000" rows="4" placeholder="可选，将显示在子站详情区域"></textarea></label>
-      <label id="quickAddPreloadField"><span>加载策略</span><span class="toggle-field"><input id="quickAddPreload" type="checkbox"><b>提前加载子站</b></span></label>
-      <div><span class="field-label">子站图标</span>${iconPicker('quickAddIcon')}</div>
-      <button class="manage-primary" type="submit">添加到工作台</button>
+      ${isIntegration ? '<label><span>详情</span><textarea id="quickAddDetails" maxlength="2000" rows="4" placeholder="可选，将显示在子站详情区域"></textarea></label>' : ''}
+      ${isIntegration ? '<label id="quickAddPreloadField"><span>加载策略</span><span class="toggle-field"><input id="quickAddPreload" type="checkbox"><b>提前加载子站</b></span></label>' : ''}
+      <div><span class="field-label">${isIntegration ? '子站图标' : '导航图标'}</span>${iconPicker('quickAddIcon')}</div>
+      <button class="manage-primary" type="submit">${isIntegration ? '接入子站' : '添加导航'}</button>
     </form>`;
-    Cn.openModal({ title: '添加子站', body, className: 'cn-modal-add', buttons: [] });
-    $('quickAddPreloadField').hidden = defaultKind !== 'integration';
-    document.querySelectorAll('[data-add-mode]').forEach((button) => button.addEventListener('click', () => {
-      document.querySelectorAll('[data-add-mode]').forEach((item) => item.classList.toggle('active', item === button));
-      $('quickAddKind').value = button.dataset.addMode;
-      $('quickAddPreloadField').hidden = button.dataset.addMode !== 'integration';
-    }));
+    Cn.openModal({ title: isIntegration ? '添加子站' : '添加网站导航', body, className: 'cn-modal-add', buttons: [] });
     $('quickAddForm').addEventListener('submit', async (event) => {
       event.preventDefault();
       const kind = $('quickAddKind').value;
@@ -630,9 +570,9 @@
             name: formValue('quickAddName'),
             url: formValue('quickAddUrl'),
             description: formValue('quickAddDescription'),
-            details: formValue('quickAddDetails'),
+            details: isIntegration ? formValue('quickAddDetails') : '',
             icon: selectedIcon('quickAddIcon'),
-            preload: $('quickAddPreload')?.checked || false,
+            preload: isIntegration && ($('quickAddPreload')?.checked || false),
           }),
         });
         Cn.closeModal();
@@ -1011,7 +951,8 @@
   $('openWorkbenchBtn').addEventListener('click', () => openItem(state.selected));
   $('backBtn').addEventListener('click', exitEmbed);
   $('detailDocsBtn').addEventListener('click', showDocs);
-  $('addSiteBtn').addEventListener('click', () => openAddSite());
+  $('addSiteBtn').addEventListener('click', () => openAddSite('integration'));
+  $('addShortcutBtn').addEventListener('click', () => openAddSite('shortcut'));
 
   const shell = $('appShell');
   const mqMobile = matchMedia('(max-width: 1180px)');
@@ -1050,14 +991,6 @@
 
   Cn.initThemeToggle('#themeToggleBtn');
   window.addEventListener('calpher:themechange', () => {
-    sendEmbedTheme();
-    refreshEmbedLaunchUrl();
-    $('detailTheme').textContent = resolvedTheme() === 'light' ? '亮色' : '暗色';
-  });
-  const colorScheme = matchMedia('(prefers-color-scheme: light)');
-  colorScheme.addEventListener('change', () => {
-    if (document.documentElement.dataset.theme !== 'system') return;
-    document.documentElement.dataset.themeResolved = colorScheme.matches ? 'light' : 'dark';
     sendEmbedTheme();
     refreshEmbedLaunchUrl();
     $('detailTheme').textContent = resolvedTheme() === 'light' ? '亮色' : '暗色';

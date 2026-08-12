@@ -9,10 +9,20 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script>
       (() => {
-        try { var t = localStorage.getItem('calpher-workbench-theme') || 'dark'; } catch (e) { var t = 'dark'; }
-        var valid = ['light', 'dark', 'system'].includes(t) ? t : 'dark';
-        var resolved = valid === 'system' ? (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark') : valid;
-        document.documentElement.dataset.theme = valid;
+        var deviceTheme = () => {
+          var hour = new Date().getHours();
+          return hour >= 7 && hour < 19 ? 'light' : 'dark';
+        };
+        try {
+          var savedTheme = localStorage.getItem('calpher-workbench-theme');
+          var resolved = localStorage.getItem('calpher-workbench-theme-manual') === '1'
+            && ['light', 'dark'].includes(savedTheme)
+            ? savedTheme
+            : deviceTheme();
+        } catch (e) {
+          var resolved = deviceTheme();
+        }
+        document.documentElement.dataset.theme = resolved;
         document.documentElement.dataset.themeResolved = resolved;
       })();
     </script>
