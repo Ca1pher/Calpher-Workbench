@@ -21,7 +21,7 @@ PARENT_DOMAIN = "kypher72.indevs.in" # 可选；同父域时启用父域 Cookie
 npx wrangler secret put AUTH_COOKIE_SECRET
 ```
 
-平台子站和用户创建的个人子站都使用项目独立密钥。主站管理页显示该项目的密钥，子站把同一值配置为自己的 `AUTH_COOKIE_SECRET`，且只能通过 Cloudflare Secret 管理。主站自身的 `AUTH_COOKIE_SECRET` 不提供给子站。快捷方式没有密钥，也不参与统一鉴权。
+平台子站和用户创建的个人子站都使用项目独立密钥。主站管理页显示该项目的密钥，子站把同一值配置为自己的 `AUTH_COOKIE_SECRET`，且只能通过 Cloudflare Secret 管理。主站自身的 `AUTH_COOKIE_SECRET` 不提供给子站。网站导航没有密钥，也不参与统一鉴权。
 
 ## 跨域登录
 
@@ -53,11 +53,11 @@ WebKit/Safari 的严格第三方存储策略仍可能要求 Storage Access API �
 - `AUTH_MASTER_PASS`：主站登录密码
 - `AUTH_COOKIE_SECRET`：主站会话、成员密码保险箱与项目 handoff 的主站密钥；不与子站共享
 - `PARENT_DOMAIN`：可选父域
-- `WORKBENCH_KV`：普通成员、配额、个人项目和快捷方式的数据绑定
+- `WORKBENCH_KV`：普通成员、配额、个人项目和网站导航的数据绑定
 
 子项目在统一鉴权模式下不配置 `AUTH_MASTER_PASS`。
 
-管理员账号密码保持 Cloudflare 环境变量明文。普通成员密码在 KV 中保存带随机盐的 PBKDF2-SHA256 摘要，并额外保存由主站密钥派生 AES-GCM 密钥加密的密码保险箱；成员列表不返回密码，只有管理员专用的禁止缓存接口按需解密。普通成员默认可创建 3 个个人接入子站和 10 个快捷方式，管理员可调整配额、查看成员工作台与删除成员。成员可修改自己的名字和密码，也可删除账号及其全部工作台数据。
+管理员账号密码保持 Cloudflare 环境变量明文。普通成员密码在 KV 中保存带随机盐的 PBKDF2-SHA256 摘要，并额外保存由主站密钥派生 AES-GCM 密钥加密的密码保险箱；成员列表不返回密码，只有管理员专用的禁止缓存接口按需解密。普通成员默认可创建 3 个个人接入子站和 10 个网站导航，管理员可调整配额、查看成员工作台与删除成员。成员可修改自己的名字和密码，也可删除账号及其全部工作台数据。
 
 ## 接入边界
 
