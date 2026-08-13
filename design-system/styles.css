@@ -230,9 +230,8 @@ svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width:
 .embed-open { font-size: 11px; color: var(--accent-300); text-decoration: none; white-space: nowrap; }
 .embed-open:hover { text-decoration: underline; }
 .embed-frame { position: relative; flex: 1; min-width: 0; min-height: 0; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,.1); background: #080d0b; }
-.embed-iframe { width: 100%; min-width: 100%; height: 100%; border: 0; background: #080d0b; display: block; }
-.embed-preload-pool { position: fixed; width: min(1280px, 92vw); height: min(820px, 88vh); left: -200vw; top: 0; overflow: hidden; opacity: 0; pointer-events: none; contain: strict; }
-.embed-preload-pool .embed-iframe { position: absolute; inset: 0; width: 100%; min-width: 100%; height: 100%; }
+.embed-iframe { position: absolute; inset: 0; width: 100%; min-width: 100%; height: 100%; border: 0; background: #080d0b; display: block; visibility: hidden; opacity: 0; pointer-events: none; }
+.embed-iframe.is-active { visibility: visible; opacity: 1; pointer-events: auto; }
 .embed-loading { position: absolute; inset: 0; display: grid; color: #dbe5e0; background: #070b09; z-index: 2; overflow: hidden; }
 .embed-loading::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0 24%, rgb(var(--accent-rgb) / .055) 24% 25%, transparent 25% 74%, rgba(255,255,255,.035) 74% 75%, transparent 75%); background-size: 48px 100%; opacity: .72; }
 .embed-loading::after { content: ""; position: absolute; inset: auto 0 0; height: 34%; border-top: 1px solid rgb(var(--accent-rgb) / .13); background: linear-gradient(180deg, rgb(var(--accent-rgb) / .035), transparent); }

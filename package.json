@@ -12,7 +12,7 @@
     "predeploy": "npm run build",
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",
-    "test": "node --experimental-default-type=module --test auth/auth.test.mjs"
+    "test": "node --experimental-default-type=module --test auth/auth.test.mjs tests/*.test.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.1",

@@ -24,7 +24,7 @@
         document.documentElement.dataset.accent = ['emerald','ocean','iris','amber','sakura'].includes(a) ? a : 'ocean';
       })();
     </script>
-    <link rel="stylesheet" href="/assets/styles.css?v=19" />
+    <link rel="stylesheet" href="/assets/styles.css?v=20" />
   </head>
   <body class="workbench-body">
     <svg class="svg-sprite" aria-hidden="true">
@@ -137,10 +137,9 @@
                 </div>
               </div>
             </div>
-            <iframe id="embedFrame" class="embed-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox" title="子项目"></iframe>
+            <iframe id="embedFrame" class="embed-iframe" aria-hidden="true" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-popups-to-escape-sandbox" title="子项目"></iframe>
           </div>
         </div>
-        <div id="embedPreloadPool" class="embed-preload-pool" aria-hidden="true"></div>
       </section>
 
       <aside class="details-panel panel" id="detailsPanel">
@@ -182,6 +181,6 @@
     <div id="toast" class="toast" role="status"></div>
     <script src="/assets/components.js?v=13"></script>
     <script src="/assets/workbench-motion.bundle.js?v=2"></script>
-    <script src="/app.js?v=20"></script>
+    <script src="/app.js?v=21"></script>
   </body>
 </html>

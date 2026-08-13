@@ -100,8 +100,18 @@
     return frame;
   }
 
-  function moveFrameToPool(frame) {
-    if (frame) $('embedPreloadPool').appendChild(frame);
+  function mountFrame(frame) {
+    if (frame && frame.parentElement !== frameHost()) frameHost().appendChild(frame);
+    return frame;
+  }
+
+  function cleanupInactivePreloads() {
+    state.preloadFrames.forEach((entry, id) => {
+      if (!state.apps[id]?.preload && state.activeFrame !== entry.frame) {
+        entry.frame.remove();
+        state.preloadFrames.delete(id);
+      }
+    });
   }
 
   function frameForApp(id) {
@@ -112,17 +122,28 @@
         entry = { frame: makeEmbedFrame(id), status: 'idle' };
         state.preloadFrames.set(id, entry);
       }
-      $('embedPreloadPool').appendChild(entry.frame);
-      return entry.frame;
+      return mountFrame(entry.frame);
     }
-    return $('embedFrame');
+    return mountFrame($('embedFrame'));
   }
 
   function activateFrame(frame) {
-    const current = state.activeFrame || $('embedFrame');
-    if (current !== frame) moveFrameToPool(current);
-    frameHost().appendChild(frame);
+    mountFrame(frame);
+    frameHost().querySelectorAll('.embed-iframe').forEach((item) => {
+      item.classList.toggle('is-active', item === frame);
+      item.setAttribute('aria-hidden', item === frame ? 'false' : 'true');
+    });
     state.activeFrame = frame;
+    cleanupInactivePreloads();
+  }
+
+  function deactivateFrames() {
+    frameHost().querySelectorAll('.embed-iframe').forEach((frame) => {
+      frame.classList.remove('is-active');
+      frame.setAttribute('aria-hidden', 'true');
+    });
+    state.activeFrame = null;
+    cleanupInactivePreloads();
   }
 
   function revealFrameAfterLayout(frame) {
@@ -242,7 +263,7 @@
   function exitEmbed() {
     state.view = { mode: 'local' };
     hideTransition();
-    moveFrameToPool(state.activeFrame || $('embedFrame'));
+    deactivateFrames();
     $('embedTitle').textContent = '加载中…';
     const mutate = () => {
       $('appShell').classList.remove('embed-view', 'details-available');
@@ -295,12 +316,7 @@
   function schedulePreloads() {
     state.preloadRun += 1;
     const run = state.preloadRun;
-    state.preloadFrames.forEach((entry, id) => {
-      if (!state.apps[id]?.preload && state.activeFrame !== entry.frame) {
-        entry.frame.remove();
-        state.preloadFrames.delete(id);
-      }
-    });
+    cleanupInactivePreloads();
     const candidates = Object.entries(state.apps)
       .filter(([, app]) => app.kind === 'integration' && app.preload)
       .slice(0, 3);
@@ -318,7 +334,7 @@
       }
       if (entry.status === 'idle' || entry.status === 'error') {
         entry.status = 'loading';
-        $('embedPreloadPool').appendChild(entry.frame);
+        mountFrame(entry.frame);
         entry.frame.addEventListener('load', () => {
           if (entry.status === 'loading') entry.status = 'loaded';
           if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === entry.frame) {
