@@ -172,6 +172,18 @@
     }, new URL(target.url, location.origin).origin);
   }
 
+  function requestFrameDataRefresh(frame, target, entry) {
+    if (!frame?.contentWindow || !target?.url || !entry) return;
+    entry.refreshRequested = false;
+    entry.refreshRequestId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    frame.contentWindow.postMessage({
+      source: 'kypher-embed',
+      type: 'refresh',
+      reason: 'activate',
+      requestId: entry.refreshRequestId,
+    }, new URL(target.url, location.origin).origin);
+  }
+
   function sendEmbedTheme() {
     const current = state.view;
     if (current?.mode === 'embed') sendThemeToFrame(state.activeFrame || $('embedFrame'), state.apps[current.id]);
@@ -240,7 +252,11 @@
     if (!app.preload) frame.removeAttribute('src');
     showTransition(app);
     const preload = app.preload && state.preloadFrames.get(id);
-    if (preload && preload.status === 'ready') revealFrameAfterLayout(frame);
+    if (preload) preload.refreshRequested = true;
+    if (preload && preload.status === 'ready') {
+      requestFrameDataRefresh(frame, app, preload);
+      revealFrameAfterLayout(frame);
+    }
     else if (!frame.src) requestAnimationFrame(async () => {
       try {
         if (preload) preload.status = 'loading';
@@ -304,7 +320,10 @@
     if (data.type === 'ready') {
       if (entry) entry.status = 'ready';
       sendThemeToFrame(frame, app);
+      if (entry?.refreshRequested) requestFrameDataRefresh(frame, app, entry);
       if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === frame) revealFrameAfterLayout(frame);
+    } else if (data.type === 'refreshed' && entry && data.requestId === entry.refreshRequestId) {
+      entry.refreshRequestId = '';
     } else if (state.view.mode === 'embed' && state.view.id === id && state.activeFrame === frame && data.type === 'title' && data.title) {
       $('pageTitleMain').textContent = data.title;
       $('embedTitle').textContent = data.title;

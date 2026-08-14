@@ -18,3 +18,12 @@ test('embed switching changes visibility without moving mounted frames', () => {
   assert.match(cssSource, /\.embed-iframe\.is-active\s*\{/);
   assert.match(cssSource, /\.embed-iframe\s*\{[^}]*visibility:\s*hidden/);
 });
+
+test('reactivating a preloaded frame refreshes business data without reloading it', () => {
+  assert.match(appSource, /function requestFrameDataRefresh\(frame, target, entry\)/);
+  assert.match(appSource, /type:\s*'refresh'/);
+  assert.match(appSource, /reason:\s*'activate'/);
+  assert.match(appSource, /if \(preload\) preload\.refreshRequested = true/);
+  assert.match(appSource, /if \(entry\?\.refreshRequested\) requestFrameDataRefresh\(frame, app, entry\)/);
+  assert.doesNotMatch(appSource, /contentWindow\.location\.reload|frame\.contentWindow\.location/);
+});

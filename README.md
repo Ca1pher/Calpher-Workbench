@@ -32,7 +32,7 @@ Cloudflare Worker 个人工作台，支持管理员、普通成员、跨域统�
 2. 子站复制或按技术栈适配主站 `auth/auth.js`，保留原有鉴权作为独立站回退。
 3. 配置 `AUTH_MASTER_ORIGIN`，再用 `wrangler secret put AUTH_COOKIE_SECRET` 写入该项目的独立密钥。
 4. 接入 handoff callback、统一退出和页面 API 的 `401 + loginUrl` 处理；不要改变机器接口或公开订阅的原鉴权语义。
-5. 需要桌面嵌入时，实现 `embed`、`ready` 和主题同步协议；需要移动端返回入口时识别 `from=workbench`。
+5. 需要桌面嵌入时，实现 `embed`、`ready`、重新激活时的 `refresh` 数据刷新和主题同步协议；需要移动端返回入口时识别 `from=workbench`。
 6. 分别验证统一鉴权模式和移除任一接入变量后的独立站模式，再按验收清单发布。
 
 完整创建、接入、安全与验收规则见 [`docs/接入标准.md`](docs/接入标准.md)；鉴权模块摘要见 [`auth/README.md`](auth/README.md)。
