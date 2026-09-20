@@ -1,443 +1,162 @@
 [
   {
-    "id": "✨五点短剧✨",
-    "name": "✨五点短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "dyttzy",
+    "name": "电影天堂资源",
+    "baseUrl": "http://caiji.dyttzyapi.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 1,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/五点短剧.json"
+    "priority": 1
   },
   {
-    "id": "✨乾坤短剧✨",
-    "name": "✨乾坤短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "heimuer",
+    "name": "黑木耳",
+    "baseUrl": "https://json.heimuer.xyz/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 2,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/乾坤短剧.json"
+    "priority": 1
   },
   {
-    "id": "py_星芽短剧APP",
-    "name": "✨py星芽短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "ruyi",
+    "name": "如意资源",
+    "baseUrl": "http://cj.rycjapi.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 3,
-    "sourceType": "python",
-    "api": "./py/星芽短剧.py"
+    "priority": 1
   },
   {
-    "id": "py_河马短剧APP",
-    "name": "✨py河马短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "bfzy",
+    "name": "暴风资源",
+    "baseUrl": "https://bfzyapi.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 4,
-    "sourceType": "python",
-    "api": "./py/河马短剧.py"
+    "priority": 1
   },
   {
-    "id": "py_西饭短剧APP",
-    "name": "✨py稀饭短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "tyyszy",
+    "name": "天涯资源",
+    "baseUrl": "https://tyyszy.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 5,
-    "sourceType": "python",
-    "api": "./py/西饭短剧.py"
+    "priority": 1
   },
   {
-    "id": "✨稀饭短剧✨",
-    "name": "✨xp稀饭短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "ffzy",
+    "name": "非凡影视",
+    "baseUrl": "http://ffzy5.tv/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 6,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/稀饭短剧.json"
+    "priority": 1
   },
   {
-    "id": "✨网飞短剧✨",
-    "name": "✨网飞短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "zy360",
+    "name": "360资源",
+    "baseUrl": "https://360zy.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 7,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/网飞短剧.json"
+    "priority": 1
   },
   {
-    "id": "短剧好看",
-    "name": "✨短剧好看✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "maotaizy",
+    "name": "茅台资源",
+    "baseUrl": "https://caiji.maotaizy.cc/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 8,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ"
+    "priority": 1
   },
   {
-    "id": "低端影视",
-    "name": "✨低端短剧✨乐哥甄选✨",
-    "baseUrl": "https://diduan3.com/show-duanju-----------/",
+    "id": "wolong",
+    "name": "卧龙资源",
+    "baseUrl": "https://wolongzyw.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 9,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ"
+    "priority": 1
   },
   {
-    "id": "✨白羊短剧✨",
-    "name": "✨白羊短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "jisu",
+    "name": "极速资源",
+    "baseUrl": "https://jszyapi.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 10,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/白羊短剧.json"
+    "priority": 1
   },
   {
-    "id": "熊猫短剧",
-    "name": "✨熊猫短剧✨乐哥甄选✨",
-    "baseUrl": "https://www.xtqyzz.com/screen/duanju-----------.html",
+    "id": "dbzy",
+    "name": "豆瓣资源",
+    "baseUrl": "https://dbzy.tv/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 11,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ"
+    "priority": 1
   },
   {
-    "id": "✨八戒短剧✨",
-    "name": "✨八戒短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "mozhua",
+    "name": "魔爪资源",
+    "baseUrl": "https://mozhuazy.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 12,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/八戒短剧.json"
+    "priority": 1
   },
   {
-    "id": "✨趣映坊短剧✨",
-    "name": "✨趣映坊短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "mdzy",
+    "name": "魔都资源",
+    "baseUrl": "https://www.mdzyapi.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 13,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/趣映坊短剧.json"
+    "priority": 1
   },
   {
-    "id": "✨明星短剧✨",
-    "name": "✨明星短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "zuid",
+    "name": "最大资源",
+    "baseUrl": "https://api.zuidapi.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 14,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/明星短剧.json"
+    "priority": 1
   },
   {
-    "id": "✨开尔短剧✨",
-    "name": "✨开尔短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "yinghua",
+    "name": "樱花资源",
+    "baseUrl": "https://m3u8.apiyhzy.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 15,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/开尔短剧.json"
+    "priority": 1
   },
   {
-    "id": "✨全能短剧✨",
-    "name": "✨全能短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "wujin",
+    "name": "无尽资源",
+    "baseUrl": "https://api.wujinapi.me/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 16,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/全能短剧.json"
+    "priority": 1
   },
   {
-    "id": "✨影院王✨",
-    "name": "✨短剧王✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "wwzy",
+    "name": "旺旺短剧",
+    "baseUrl": "https://wwzy.tv/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 17,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/短剧王.json"
+    "priority": 1
   },
   {
-    "id": "✨热播影院✨",
-    "name": "✨热播短剧✨乐哥甄选✨",
-    "baseUrl": "",
+    "id": "ikun",
+    "name": "iKun资源",
+    "baseUrl": "https://ikunzyapi.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 18,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/热播短剧.json"
+    "priority": 1
   },
   {
-    "id": "OK短剧",
-    "name": "✨OK短剧✨乐哥甄选✨",
-    "baseUrl": "http://okfrp.com/show/40-----------.html",
+    "id": "lzi",
+    "name": "量子资源站",
+    "baseUrl": "https://cj.lziapi.com/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 19,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ"
+    "priority": 1
   },
   {
-    "id": "✨影视大全1✨",
-    "name": "✨短剧大全1✨乐哥甄选✨",
-    "baseUrl": "https://www.yingshidaquantv.com/index.php/ajax/data?mid=1&tid=36",
+    "id": "xiaomaomi",
+    "name": "小猫咪资源",
+    "baseUrl": "https://zy.xmm.hk/api.php/provide/vod",
     "group": "normal",
     "enabled": true,
-    "priority": 20,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ"
-  },
-  {
-    "id": "✨HG短剧✨",
-    "name": "✨HG短剧✨乐哥甄选✨",
-    "baseUrl": "https://hong.hgyx.vip/index.php/vod/show/id/20.html",
-    "group": "normal",
-    "enabled": true,
-    "priority": 21,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ"
-  },
-  {
-    "id": "✨奶茶影院✨",
-    "name": "✨奶茶短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 22,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/奶茶短剧.json"
-  },
-  {
-    "id": "✨电影100影院✨",
-    "name": "✨电影100短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 23,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/电影100短剧.json"
-  },
-  {
-    "id": "✨麦田影院✨",
-    "name": "✨麦田短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 24,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/麦田短剧.json"
-  },
-  {
-    "id": "✨唐人街影院✨",
-    "name": "✨唐人街短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 25,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/唐人街短剧.json"
-  },
-  {
-    "id": "✨天龙影院✨",
-    "name": "✨天龙短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 26,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/天龙短剧.json"
-  },
-  {
-    "id": "✨追剧网✨",
-    "name": "✨追剧短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 27,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/追剧短剧.json"
-  },
-  {
-    "id": "追剧影院1",
-    "name": "✨追剧短剧1✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 28,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/追剧短剧1.json"
-  },
-  {
-    "id": "追剧网1",
-    "name": "✨追剧短剧2✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 29,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/追剧短剧2.json"
-  },
-  {
-    "id": "✨一起看✨",
-    "name": "✨一起看短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 30,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/一起看短剧.json"
-  },
-  {
-    "id": "✨七味短剧✨",
-    "name": "✨七味短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 31,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/七味短剧.json"
-  },
-  {
-    "id": "优影视",
-    "name": "✨优短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 32,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/优短剧.json"
-  },
-  {
-    "id": "✨量子影视✨",
-    "name": "✨量子短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 33,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/量子短剧.json"
-  },
-  {
-    "id": "护航短剧",
-    "name": "✨护航短剧✨乐哥甄选✨",
-    "baseUrl": "https://www.qdhuhang.com/qdhyl/48.html",
-    "group": "normal",
-    "enabled": true,
-    "priority": 34,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ"
-  },
-  {
-    "id": "✨安迪短剧✨",
-    "name": "✨安迪短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 35,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/安迪短剧.json"
-  },
-  {
-    "id": "✨PTT短剧✨",
-    "name": "✨PTT短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 36,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/PTT短剧.json"
-  },
-  {
-    "id": "✨老王影院✨",
-    "name": "✨老王短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 37,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/老王短剧.json"
-  },
-  {
-    "id": "✨毒舌短剧✨",
-    "name": "✨毒舌短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 38,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/毒舌短剧.json"
-  },
-  {
-    "id": "✨微云影视✨",
-    "name": "✨微云短剧✨乐哥甄选✨",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 39,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/微云短剧.json"
-  },
-  {
-    "id": "闪闪音乐网",
-    "name": "🎵闪闪音乐网",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 40,
-    "sourceType": "scraper",
-    "api": "csp_XBPQ",
-    "configRef": "./json/闪闪音乐网.json"
-  },
-  {
-    "id": "應用商店",
-    "name": "关注公众号【乐哥影视】",
-    "baseUrl": "",
-    "group": "normal",
-    "enabled": true,
-    "priority": 41,
-    "sourceType": "market",
-    "api": "csp_Market",
-    "configRef": "./lib/market.json"
+    "priority": 1
   }
 ]
